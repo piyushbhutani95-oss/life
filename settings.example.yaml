@@ -1,0 +1,38 @@
+# Copy this to settings.yaml (which is gitignored) and fill in your values.
+
+user:
+  name: Piyush
+  timezone: Asia/Kolkata   # IANA tz name; change if you're not on IST
+
+# When does "today" begin/end for the watcher's purposes?
+# rollover_hour: at this local hour, the day flips. Late-night work before
+# rollover still counts toward "yesterday".
+day:
+  start_hour: 7
+  end_hour: 23
+  rollover_hour: 3
+
+# Don't push between these hours.
+quiet_hours:
+  start: "23:00"
+  end: "07:00"
+
+# ntfy is the "mailbox" — a free push service. Pick a long random topic name
+# (treat it like a password). Subscribe to it from the ntfy Android app.
+ntfy:
+  server: https://ntfy.sh
+  topic: life-os-CHANGE-ME-TO-LONG-RANDOM-STRING
+
+# Google Calendar — used by schedule.py and tick.py (later milestones).
+calendar:
+  id: primary
+  event_prefix: "🎯 Life:"
+  marker: "auto-scheduled-by:life-os"
+  color_id: 9   # Google Calendar's "Blueberry"
+
+# How "behind" do you have to be before each escalation level fires?
+# Numbers are fractions of the waking day elapsed.
+escalation:
+  soft_after: 0.30
+  firm_after: 0.50
+  hard_after: 0.75

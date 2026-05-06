@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wednesday, May 6 — Life</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf7f2;
+    --ink: #2c2418;
+    --muted: #8b7e6b;
+    --line: #e8e1d4;
+    --sage: #6b7f5a;
+    --done-bg: #f1ede3;
+    --skip: #a89a83;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 88px 32px 64px;
+  }
+
+  header.head {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 28px;
+    margin-bottom: 36px;
+  }
+  .date {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    font-size: 44px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    margin: 0 0 16px;
+  }
+  .status-line {
+    font-size: 17px;
+    color: var(--ink);
+    margin: 0 0 24px;
+  }
+  .progress {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .progress__bar {
+    flex: 1;
+    height: 2px;
+    background: var(--line);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress__fill {
+    height: 100%;
+    background: var(--sage);
+    width: 0.0%;
+    transition: width 600ms ease;
+  }
+  .progress__count {
+    font-feature-settings: "tnum";
+    color: var(--ink);
+  }
+
+  .section {
+    margin: 36px 0;
+  }
+  .section__label {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    margin: 0 0 16px;
+    font-weight: 600;
+  }
+  .goals { list-style: none; padding: 0; margin: 0; }
+  .goal {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 24px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .goal:last-child { border-bottom: none; }
+  .goal__main { flex: 1; min-width: 0; }
+  .goal__title {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+  .goal__desc {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  .goal__meta {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .goal--done .goal__title,
+  .goal--done .goal__desc {
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--line);
+  }
+  .goal--skipped .goal__title,
+  .goal--skipped .goal__desc {
+    color: var(--skip);
+    font-style: italic;
+  }
+
+  footer.foot {
+    border-top: 1px solid var(--line);
+    padding-top: 24px;
+    margin-top: 64px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    font-feature-settings: "tnum";
+  }
+  footer.foot .right { text-align: right; }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1a16;
+      --ink: #f0ebe0;
+      --muted: #847b6b;
+      --line: #2e2a23;
+      --sage: #8aa177;
+      --done-bg: #25221c;
+      --skip: #5e5749;
+    }
+  }
+</style>
+</head>
+<body>
+  <main class="page">
+    <header class="head">
+      <h1 class="date">Wednesday, May 6</h1>
+      <p class="status-line">Behind. 5 open and only 60% of the day remains.</p>
+      <div class="progress">
+        <span class="progress__count">0 of 5</span>
+        <span class="progress__bar"><span class="progress__fill"></span></span>
+        <span>39% of the day</span>
+      </div>
+    </header>
+    
+    <section class="section">
+      <h2 class="section__label">To do</h2>
+      <ul class="goals">
+      <li class="goal goal--open">
+        <div class="goal__main">
+          <div class="goal__title">Deep work block</div>
+          <div class="goal__desc">One uninterrupted focused work session</div>
+        </div>
+        <div class="goal__meta">1h 30m · morning · high priority</div>
+      </li>
+      <li class="goal goal--open">
+        <div class="goal__main">
+          <div class="goal__title">Workout</div>
+          <div class="goal__desc">Gym, run, or 20 min bodyweight — anything that gets the heart rate up</div>
+        </div>
+        <div class="goal__meta">45m · high priority</div>
+      </li>
+      <li class="goal goal--open">
+        <div class="goal__main">
+          <div class="goal__title">Meditate</div>
+          <div class="goal__desc">10–15 min sit, no phone</div>
+        </div>
+        <div class="goal__meta">15m · morning</div>
+      </li>
+      <li class="goal goal--open">
+        <div class="goal__main">
+          <div class="goal__title">Read</div>
+          <div class="goal__desc">30 min of a book (not feeds, not articles)</div>
+        </div>
+        <div class="goal__meta">30m · evening</div>
+      </li>
+      <li class="goal goal--open">
+        <div class="goal__main">
+          <div class="goal__title">Walk outside</div>
+          <div class="goal__desc">20 min, ideally without headphones</div>
+        </div>
+        <div class="goal__meta">20m</div>
+      </li>
+      </ul>
+    </section>
+    <footer class="foot">
+      <div>1:20 pm</div>
+      <div class="right">No nudges yet today.</div>
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+.env.local
+settings.yaml
+secrets/
+google-token.json
+google-credentials.json
+.DS_Store

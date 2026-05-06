@@ -1,0 +1,17 @@
+# Today's state. One file per day.
+#
+# completions: each entry references a goal by id and records what happened.
+#   status: done | partial | skipped
+#   at:     local time the action was logged (HH:MM)
+#   notes:  optional free text
+#
+# notifications_sent: audit log so the watcher doesn't repeat itself.
+# scheduled_blocks: events the watcher dropped on Google Calendar today.
+
+date: 2026-05-06
+
+completions: []
+
+notifications_sent: []
+
+scheduled_blocks: []

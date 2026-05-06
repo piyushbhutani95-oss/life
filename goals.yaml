@@ -1,0 +1,56 @@
+# Your recurring daily goals.
+#
+# Edit by talking to Claude in plain English:
+#   "Add a goal: meditate 15 minutes, prefer mornings"
+#   "Remove reading"
+#   "Make workout high priority"
+#
+# Schema (per goal):
+#   id:              short slug, lowercase, used internally (must be unique)
+#   title:           what shows on the dashboard
+#   description:     optional, shown in tooltip / details
+#   target_minutes:  how long it should take (informs calendar block size)
+#   priority:        low | medium | high   (high = nudged earlier and louder)
+#   window:          preferred time of day — morning | afternoon | evening | any
+#   active:          true / false — set false to pause without deleting
+
+goals:
+  - id: meditate
+    title: Meditate
+    description: 10–15 min sit, no phone
+    target_minutes: 15
+    priority: medium
+    window: morning
+    active: true
+
+  - id: deep-work
+    title: Deep work block
+    description: One uninterrupted focused work session
+    target_minutes: 90
+    priority: high
+    window: morning
+    active: true
+
+  - id: workout
+    title: Workout
+    description: Gym, run, or 20 min bodyweight — anything that gets the heart rate up
+    target_minutes: 45
+    priority: high
+    window: any
+    active: true
+
+  - id: read
+    title: Read
+    description: 30 min of a book (not feeds, not articles)
+    target_minutes: 30
+    priority: low
+    window: evening
+    active: true
+
+  - id: walk
+    title: Walk outside
+    description: 20 min, ideally without headphones
+    target_minutes: 20
+    priority: low
+    window: any
+    active: true
