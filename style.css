@@ -1,0 +1,283 @@
+/* ──────────────────────────────────────────────────────────
+   Life Webpage — Claude design pass
+   Edit this file directly and refresh the browser to iterate.
+   The dashboard's data still comes from render.py.
+   ────────────────────────────────────────────────────────── */
+
+:root {
+  /* Claude warm-paper palette */
+  --bg:           #F0EEE6;
+  --surface:      #FAF9F5;
+  --ink:          #191814;
+  --muted:        #65645E;
+  --muted-strong: #3F3D38;
+  --line:         #DDD8C9;
+  --line-strong:  #C8C2AF;
+
+  /* Claude coral as the single accent */
+  --accent:       #CC785C;
+  --accent-soft:  #E8D5C4;
+  --accent-deep:  #A85A40;
+
+  /* Status colors derived from coral + warm grays */
+  --done:         var(--accent);
+  --partial:      var(--accent-soft);
+  --skip:         #B5AE9A;
+  --today-ring:   var(--accent-deep);
+
+  /* Typography */
+  --font-serif:   'Source Serif 4', 'Source Serif Pro', Georgia, 'Times New Roman', serif;
+  --font-sans:    'Inter', -apple-system, system-ui, sans-serif;
+
+  --max-width:    660px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 18px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.page {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 96px 32px 64px;
+}
+
+
+/* ───── Dashboard zone ─────────────────────────────────── */
+
+header.dash {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 36px;
+  margin-bottom: 44px;
+}
+
+.date {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 52px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 0 0 18px;
+  color: var(--ink);
+}
+
+.status-line {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.45;
+  color: var(--muted-strong);
+  margin: 0 0 28px;
+  max-width: 36ch;
+}
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+.progress__bar {
+  flex: 1;
+  height: 2px;
+  background: var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress__fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 600ms ease;
+}
+.progress__count {
+  font-feature-settings: "tnum";
+  color: var(--muted-strong);
+  font-weight: 500;
+}
+
+
+/* ───── Section / block ─────────────────────────────────── */
+
+.block { margin: 44px 0; }
+
+.block__label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--muted);
+  margin: 0 0 18px;
+  font-weight: 500;
+}
+
+
+/* ───── Next up ─────────────────────────────────────────── */
+
+.up-list { list-style: none; padding: 0; margin: 0; }
+
+.up {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  gap: 20px;
+}
+.up:last-child { border-bottom: none; }
+
+.up__title {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+.up__meta {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: lowercase;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+
+/* ───── Habit tracker ───────────────────────────────────── */
+
+.tracker-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.tracker-head .legend {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+.rows { list-style: none; padding: 0; margin: 0; }
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto 36px;
+  gap: 24px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.row:last-child { border-bottom: none; }
+
+.row__name { min-width: 0; }
+
+.row__title {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+}
+
+.row__meta {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 3px;
+  text-transform: lowercase;
+  letter-spacing: 0.06em;
+}
+
+.row__grid {
+  display: flex;
+  gap: 4px;
+}
+
+.cell {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  display: inline-block;
+}
+.cell--done {
+  background: var(--done);
+  border-color: var(--done);
+}
+.cell--partial {
+  background: linear-gradient(135deg, var(--done) 0 50%, var(--partial) 50% 100%);
+  border-color: var(--done);
+}
+.cell--skipped {
+  background: var(--skip);
+  border-color: var(--skip);
+  opacity: 0.55;
+}
+.cell--open { background: transparent; }
+.cell--today {
+  box-shadow: 0 0 0 1.5px var(--today-ring);
+  border-color: var(--today-ring);
+}
+
+.row__streak {
+  text-align: right;
+  font-family: var(--font-serif);
+  font-feature-settings: "tnum";
+  font-size: 16px;
+  font-weight: 500;
+}
+.streak--on  { color: var(--accent-deep); }
+.streak--off { color: var(--muted); font-weight: 400; }
+
+
+/* ───── Footer ──────────────────────────────────────────── */
+
+footer.foot {
+  border-top: 1px solid var(--line);
+  padding-top: 28px;
+  margin-top: 72px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--muted);
+  font-feature-settings: "tnum";
+  letter-spacing: 0.04em;
+}
+footer.foot .right { text-align: right; }
+
+
+/* ───── Dark mode (warm paper inverted) ─────────────────── */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:           #1F1D17;
+    --surface:      #262319;
+    --ink:          #F0EBDE;
+    --muted:        #847E70;
+    --muted-strong: #B0A998;
+    --line:         #2E2A21;
+    --line-strong:  #3D372C;
+
+    --accent:       #D88A6E;
+    --accent-soft:  #4A3A30;
+    --accent-deep:  #E5A88A;
+
+    --skip:         #5A5447;
+    --today-ring:   var(--accent-deep);
+  }
+}
