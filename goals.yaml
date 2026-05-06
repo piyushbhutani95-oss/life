@@ -4,53 +4,150 @@
 #   "Add a goal: meditate 15 minutes, prefer mornings"
 #   "Remove reading"
 #   "Make workout high priority"
+#   "Pause guitar for now"  (sets active: false)
 #
 # Schema (per goal):
 #   id:              short slug, lowercase, used internally (must be unique)
 #   title:           what shows on the dashboard
-#   description:     optional, shown in tooltip / details
-#   target_minutes:  how long it should take (informs calendar block size)
-#   priority:        low | medium | high   (high = nudged earlier and louder)
-#   window:          preferred time of day — morning | afternoon | evening | any
+#   description:     optional; shown under the title in muted text
+#   target_minutes:  rough duration; null/omit for "binary" check-ins
+#   priority:        low | medium | high
+#                    high   → nudged earlier and louder if undone
+#                    low    → quick check-ins; only nudged late
+#   window:          morning | afternoon | evening | any
 #   active:          true / false — set false to pause without deleting
 
 goals:
-  - id: meditate
-    title: Meditate
-    description: 10–15 min sit, no phone
-    target_minutes: 15
-    priority: medium
-    window: morning
-    active: true
 
-  - id: deep-work
-    title: Deep work block
-    description: One uninterrupted focused work session
-    target_minutes: 90
+  # ── morning anchor ──────────────────────────────────
+  - id: wake-early
+    title: Wake up early
     priority: high
     window: morning
     active: true
 
+  # ── body & care (quick check-ins) ───────────────────
+  - id: bath
+    title: Bath
+    target_minutes: 10
+    priority: low
+    window: morning
+    active: true
+
+  - id: skincare
+    title: Skin care
+    target_minutes: 5
+    priority: low
+    window: morning
+    active: true
+
+  - id: multivitamins
+    title: Multivitamins
+    target_minutes: 1
+    priority: low
+    window: morning
+    active: true
+
+  - id: b12
+    title: B12
+    target_minutes: 1
+    priority: low
+    window: morning
+    active: true
+
+  - id: creatine
+    title: Creatine
+    target_minutes: 1
+    priority: low
+    window: any
+    active: true
+
+  # ── movement ────────────────────────────────────────
   - id: workout
     title: Workout
-    description: Gym, run, or 20 min bodyweight — anything that gets the heart rate up
+    description: Gym, run, or 20 min bodyweight
     target_minutes: 45
     priority: high
     window: any
     active: true
 
-  - id: read
-    title: Read
-    description: 30 min of a book (not feeds, not articles)
-    target_minutes: 30
-    priority: low
+  - id: step-out
+    title: Step out
+    description: Fresh air, ideally without headphones
+    target_minutes: 15
+    priority: medium
+    window: afternoon
+    active: true
+
+  # ── mind & practice ─────────────────────────────────
+  - id: meditate
+    title: Meditate
+    target_minutes: 15
+    priority: medium
+    window: morning
+    active: true
+
+  - id: journal
+    title: Journal
+    target_minutes: 15
+    priority: medium
     window: evening
     active: true
 
-  - id: walk
-    title: Walk outside
-    description: 20 min, ideally without headphones
+  - id: read
+    title: Read
+    description: A book, not feeds
+    target_minutes: 30
+    priority: high
+    window: evening
+    active: true
+
+  - id: write
+    title: Write
+    target_minutes: 60
+    priority: high
+    window: morning
+    active: true
+
+  - id: code
+    title: Code
+    target_minutes: 90
+    priority: high
+    window: any
+    active: true
+
+  - id: guitar
+    title: Practice guitar
+    target_minutes: 30
+    priority: medium
+    window: any
+    active: true
+
+  - id: language
+    title: Language
     target_minutes: 20
-    priority: low
+    priority: medium
+    window: any
+    active: true
+
+  - id: course
+    title: Course
+    target_minutes: 30
+    priority: medium
+    window: any
+    active: true
+
+  # ── people ──────────────────────────────────────────
+  - id: talk-to-people
+    title: Talk to people
+    description: Real conversation — call, in person, voice note
+    priority: medium
+    window: any
+    active: true
+
+  - id: respond-to-people
+    title: Respond to people
+    description: Clear messages, don't leave anyone hanging
+    priority: medium
     window: any
     active: true

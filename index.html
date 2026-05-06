@@ -13,9 +13,11 @@
     --ink: #2c2418;
     --muted: #8b7e6b;
     --line: #e8e1d4;
+    --line-strong: #d8cfbd;
     --sage: #6b7f5a;
-    --done-bg: #f1ede3;
-    --skip: #a89a83;
+    --sage-soft: #b3c0a3;
+    --skip: #b8aa92;
+    --today: #c8a05a;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
@@ -28,15 +30,16 @@
     -webkit-font-smoothing: antialiased;
   }
   .page {
-    max-width: 640px;
+    max-width: 720px;
     margin: 0 auto;
-    padding: 88px 32px 64px;
+    padding: 72px 32px 48px;
   }
 
-  header.head {
+  /* ───── Dashboard zone ───── */
+  header.dash {
     border-bottom: 1px solid var(--line);
     padding-bottom: 28px;
-    margin-bottom: 36px;
+    margin-bottom: 32px;
   }
   .date {
     font-family: 'Fraunces', Georgia, serif;
@@ -44,12 +47,12 @@
     font-size: 44px;
     line-height: 1.1;
     letter-spacing: -0.01em;
-    margin: 0 0 16px;
+    margin: 0 0 14px;
   }
   .status-line {
     font-size: 17px;
     color: var(--ink);
-    margin: 0 0 24px;
+    margin: 0 0 22px;
   }
   .progress {
     display: flex;
@@ -76,64 +79,113 @@
     color: var(--ink);
   }
 
-  .section {
-    margin: 36px 0;
-  }
-  .section__label {
+  /* ───── Block / section ───── */
+  .block { margin: 32px 0; }
+  .block__label {
     font-family: 'Inter', sans-serif;
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.18em;
     color: var(--muted);
-    margin: 0 0 16px;
+    margin: 0 0 14px;
     font-weight: 600;
   }
-  .goals { list-style: none; padding: 0; margin: 0; }
-  .goal {
+
+  /* ───── Next up list ───── */
+  .up-list { list-style: none; padding: 0; margin: 0; }
+  .up {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    gap: 24px;
-    padding: 16px 0;
+    padding: 10px 0;
     border-bottom: 1px solid var(--line);
+    gap: 16px;
   }
-  .goal:last-child { border-bottom: none; }
-  .goal__main { flex: 1; min-width: 0; }
-  .goal__title {
+  .up:last-child { border-bottom: none; }
+  .up__title {
     font-family: 'Fraunces', Georgia, serif;
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 500;
-    letter-spacing: -0.005em;
   }
-  .goal__desc {
-    color: var(--muted);
-    font-size: 14px;
-    margin-top: 4px;
-  }
-  .goal__meta {
+  .up__meta {
     font-size: 12px;
     color: var(--muted);
     text-transform: lowercase;
     letter-spacing: 0.04em;
-    white-space: nowrap;
     flex-shrink: 0;
   }
-  .goal--done .goal__title,
-  .goal--done .goal__desc {
-    color: var(--muted);
-    text-decoration: line-through;
-    text-decoration-color: var(--line);
-  }
-  .goal--skipped .goal__title,
-  .goal--skipped .goal__desc {
-    color: var(--skip);
-    font-style: italic;
-  }
 
+  /* ───── Habit list with tracker grid ───── */
+  .tracker-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .tracker-head .legend {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .rows { list-style: none; padding: 0; margin: 0; }
+  .row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 18px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .row:last-child { border-bottom: none; }
+  .row__name { min-width: 0; }
+  .row__title {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  .row__meta {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+  }
+  .row__grid {
+    display: flex;
+    gap: 3px;
+  }
+  .cell {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    display: inline-block;
+  }
+  .cell--done { background: var(--sage); border-color: var(--sage); }
+  .cell--partial {
+    background: linear-gradient(135deg, var(--sage) 0 50%, transparent 50% 100%);
+    border-color: var(--sage);
+  }
+  .cell--skipped { background: var(--skip); border-color: var(--skip); opacity: 0.5; }
+  .cell--open { background: transparent; }
+  .cell--today {
+    box-shadow: 0 0 0 1px var(--today);
+  }
+  .row__streak {
+    width: 28px;
+    text-align: right;
+    font-feature-settings: "tnum";
+    font-size: 13px;
+  }
+  .streak--on { color: var(--sage); font-weight: 600; }
+  .streak--off { color: var(--muted); }
+
+  /* ───── Footer ───── */
   footer.foot {
     border-top: 1px solid var(--line);
-    padding-top: 24px;
-    margin-top: 64px;
+    padding-top: 22px;
+    margin-top: 56px;
     display: flex;
     justify-content: space-between;
     font-size: 12px;
@@ -142,73 +194,210 @@
   }
   footer.foot .right { text-align: right; }
 
+  /* ───── Dark mode ───── */
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #1c1a16;
       --ink: #f0ebe0;
       --muted: #847b6b;
-      --line: #2e2a23;
+      --line: #2a2620;
+      --line-strong: #3a352c;
       --sage: #8aa177;
-      --done-bg: #25221c;
+      --sage-soft: #4a5a3e;
       --skip: #5e5749;
+      --today: #c8a05a;
     }
   }
 </style>
 </head>
 <body>
   <main class="page">
-    <header class="head">
+
+    <!-- Dashboard zone -->
+    <header class="dash">
       <h1 class="date">Wednesday, May 6</h1>
-      <p class="status-line">Behind. 5 open and only 60% of the day remains.</p>
+      <p class="status-line">Behind. 18 open and only 59% of the day remains.</p>
       <div class="progress">
-        <span class="progress__count">0 of 5</span>
+        <span class="progress__count">0 of 18</span>
         <span class="progress__bar"><span class="progress__fill"></span></span>
-        <span>39% of the day</span>
+        <span>40% of the day</span>
       </div>
     </header>
     
-    <section class="section">
-      <h2 class="section__label">To do</h2>
-      <ul class="goals">
-      <li class="goal goal--open">
-        <div class="goal__main">
-          <div class="goal__title">Deep work block</div>
-          <div class="goal__desc">One uninterrupted focused work session</div>
+    <section class="block">
+      <h2 class="block__label">Next up</h2>
+      <ul class="up-list">
+        <li class="up">
+          <span class="up__title">Wake up early</span>
+          <span class="up__meta">morning · high</span>
+        </li>
+        <li class="up">
+          <span class="up__title">Write</span>
+          <span class="up__meta">1h · morning · high</span>
+        </li>
+        <li class="up">
+          <span class="up__title">Read</span>
+          <span class="up__meta">30m · evening · high</span>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Habit tracker -->
+    <section class="block">
+      <div class="tracker-head">
+        <h2 class="block__label">Habits</h2>
+        <span class="legend">14 days · today →</span>
+      </div>
+      <ul class="rows">
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">Wake up early</div>
+          <div class="row__meta">morning · high</div>
         </div>
-        <div class="goal__meta">1h 30m · morning · high priority</div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
       </li>
-      <li class="goal goal--open">
-        <div class="goal__main">
-          <div class="goal__title">Workout</div>
-          <div class="goal__desc">Gym, run, or 20 min bodyweight — anything that gets the heart rate up</div>
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">Bath</div>
+          <div class="row__meta">10m · morning</div>
         </div>
-        <div class="goal__meta">45m · high priority</div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
       </li>
-      <li class="goal goal--open">
-        <div class="goal__main">
-          <div class="goal__title">Meditate</div>
-          <div class="goal__desc">10–15 min sit, no phone</div>
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">Skin care</div>
+          <div class="row__meta">5m · morning</div>
         </div>
-        <div class="goal__meta">15m · morning</div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
       </li>
-      <li class="goal goal--open">
-        <div class="goal__main">
-          <div class="goal__title">Read</div>
-          <div class="goal__desc">30 min of a book (not feeds, not articles)</div>
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">Multivitamins</div>
+          <div class="row__meta">1m · morning</div>
         </div>
-        <div class="goal__meta">30m · evening</div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
       </li>
-      <li class="goal goal--open">
-        <div class="goal__main">
-          <div class="goal__title">Walk outside</div>
-          <div class="goal__desc">20 min, ideally without headphones</div>
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">B12</div>
+          <div class="row__meta">1m · morning</div>
         </div>
-        <div class="goal__meta">20m</div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
+      </li>
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">Creatine</div>
+          <div class="row__meta">1m</div>
+        </div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
+      </li>
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">Workout</div>
+          <div class="row__meta">45m · high</div>
+        </div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
+      </li>
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">Step out</div>
+          <div class="row__meta">15m · afternoon</div>
+        </div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
+      </li>
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">Meditate</div>
+          <div class="row__meta">15m · morning</div>
+        </div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
+      </li>
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">Journal</div>
+          <div class="row__meta">15m · evening</div>
+        </div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
+      </li>
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">Read</div>
+          <div class="row__meta">30m · evening · high</div>
+        </div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
+      </li>
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">Write</div>
+          <div class="row__meta">1h · morning · high</div>
+        </div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
+      </li>
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">Code</div>
+          <div class="row__meta">1h 30m · high</div>
+        </div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
+      </li>
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">Practice guitar</div>
+          <div class="row__meta">30m</div>
+        </div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
+      </li>
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">Language</div>
+          <div class="row__meta">20m</div>
+        </div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
+      </li>
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">Course</div>
+          <div class="row__meta">30m</div>
+        </div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
+      </li>
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">Talk to people</div>
+          
+        </div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
+      </li>
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">Respond to people</div>
+          
+        </div>
+        <div class="row__grid"><span class="cell cell--open" title="2026-04-23: open"></span><span class="cell cell--open" title="2026-04-24: open"></span><span class="cell cell--open" title="2026-04-25: open"></span><span class="cell cell--open" title="2026-04-26: open"></span><span class="cell cell--open" title="2026-04-27: open"></span><span class="cell cell--open" title="2026-04-28: open"></span><span class="cell cell--open" title="2026-04-29: open"></span><span class="cell cell--open" title="2026-04-30: open"></span><span class="cell cell--open" title="2026-05-01: open"></span><span class="cell cell--open" title="2026-05-02: open"></span><span class="cell cell--open" title="2026-05-03: open"></span><span class="cell cell--open" title="2026-05-04: open"></span><span class="cell cell--open" title="2026-05-05: open"></span><span class="cell cell--open cell--today" title="2026-05-06: open"></span></div>
+        <div class="row__streak"><span class="streak streak--off">—</span></div>
       </li>
       </ul>
     </section>
+
     <footer class="foot">
-      <div>1:20 pm</div>
+      <div>1:31 pm</div>
       <div class="right">No nudges yet today.</div>
     </footer>
   </main>

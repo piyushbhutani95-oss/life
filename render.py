@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 """
-render.py — read goals.yaml + today's state + settings, write index.html.
+render.py — read goals.yaml + recent state files + settings, write index.html.
 
-Run any time the underlying data changes. The output is a single self-contained
-HTML file you open in a browser.
+The page has two zones:
+  1. Dashboard — date, one-line status, progress, next 3 things to do
+  2. Habits — every goal with a 14-day tracker grid + current streak
+
+Run any time the underlying data changes.
 """
 
 from __future__ import annotations
 
 import html
-import os
 import sys
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -26,6 +28,8 @@ OUT_FILE = ROOT / "index.html"
 PRIORITY_ORDER = {"high": 0, "medium": 1, "low": 2}
 WINDOW_ORDER = {"morning": 0, "afternoon": 1, "evening": 2, "any": 3}
 
+HISTORY_DAYS = 14  # how many days of history to show in the tracker grid
+
 
 # ---------- loading ----------
 
@@ -37,8 +41,7 @@ def load_yaml(path: Path) -> dict:
 
 
 def today_local(tz: ZoneInfo, rollover_hour: int) -> datetime:
-    """Local 'today' respecting rollover_hour (a 2am check still belongs to yesterday
-    if rollover_hour is 3)."""
+    """Local 'today' respecting rollover_hour."""
     now = datetime.now(tz)
     if now.hour < rollover_hour:
         now -= timedelta(days=1)
@@ -52,10 +55,18 @@ def load_state_for(date_str: str) -> dict:
     return {"date": date_str, "completions": [], "notifications_sent": [], "scheduled_blocks": []}
 
 
+def load_recent_states(today: datetime, days: int) -> dict[str, dict]:
+    """Return {date_str: state} for the last `days` days, oldest first."""
+    out: dict[str, dict] = {}
+    for i in range(days - 1, -1, -1):
+        d = (today - timedelta(days=i)).strftime("%Y-%m-%d")
+        out[d] = load_state_for(d)
+    return out
+
+
 # ---------- computation ----------
 
 def day_fraction_elapsed(now: datetime, start_hour: int, end_hour: int) -> float:
-    """0.0 at the start of the waking day, 1.0 at the end. Clamped."""
     start = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
     end = now.replace(hour=end_hour, minute=0, second=0, microsecond=0)
     if now <= start:
@@ -66,43 +77,66 @@ def day_fraction_elapsed(now: datetime, start_hour: int, end_hour: int) -> float
 
 
 def status_for(goal_id: str, completions: list[dict]) -> str:
-    """Latest status for a goal today: done | partial | skipped | open."""
+    """Latest status for a goal: done | partial | skipped | open."""
     relevant = [c for c in completions if c.get("goal_id") == goal_id]
     if not relevant:
         return "open"
     return relevant[-1].get("status", "open")
 
 
+def history_for(goal_id: str, recent_states: dict[str, dict]) -> list[tuple[str, str]]:
+    """Return [(date_str, status), ...] oldest first."""
+    out = []
+    for d, state in recent_states.items():
+        out.append((d, status_for(goal_id, state.get("completions", []))))
+    return out
+
+
+def current_streak(history: list[tuple[str, str]], today_str: str) -> int:
+    """Count consecutive done-or-partial days ending at today (or yesterday if today is open)."""
+    days = list(reversed(history))
+    # Skip today if it's still open — streak shouldn't reset just because it's morning
+    if days and days[0][0] == today_str and days[0][1] == "open":
+        days = days[1:]
+    streak = 0
+    for d, status in days:
+        if status in ("done", "partial"):
+            streak += 1
+        else:
+            break
+    return streak
+
+
 def status_line(active_goals: list[dict], completions: list[dict], frac: float) -> str:
-    """Produce a one-line human status."""
     if not active_goals:
         return "No goals defined yet — tell Claude what you want to do today."
-
     statuses = {g["id"]: status_for(g["id"], completions) for g in active_goals}
     n_total = len(active_goals)
-    n_done = sum(1 for s in statuses.values() if s == "done")
+    n_done = sum(1 for s in statuses.values() if s in ("done", "partial"))
     n_skipped = sum(1 for s in statuses.values() if s == "skipped")
     n_open = n_total - n_done - n_skipped
 
     if n_open == 0:
         if n_done == n_total:
             return "All done. Take the win."
-        return "Day closed out. " + (f"{n_done} done, {n_skipped} skipped.")
+        return f"Day closed out — {n_done} done, {n_skipped} skipped."
 
-    expected_done = frac * n_total
-    actual_done = n_done + n_skipped
-    delta = expected_done - actual_done
-
-    if frac < 0.30:
+    if frac < 0.20:
         return f"Just getting started. {n_open} to go."
-    if delta < 0.5:
+
+    expected = frac * n_total
+    actual = n_done + n_skipped
+    delta = expected - actual
+
+    pct_left = int((1 - frac) * 100)
+    if delta < 1.0:
         return f"On track. {n_done} of {n_total} done."
-    if delta < 1.5:
-        return f"A bit behind. {n_open} still open with {(1-frac)*100:.0f}% of the day left."
-    return f"Behind. {n_open} open and only {(1-frac)*100:.0f}% of the day remains."
+    if delta < 3.0:
+        return f"A bit behind. {n_open} open with {pct_left}% of the day left."
+    return f"Behind. {n_open} open and only {pct_left}% of the day remains."
 
 
-def sort_open_goals(goals: list[dict]) -> list[dict]:
+def sort_open(goals: list[dict]) -> list[dict]:
     return sorted(
         goals,
         key=lambda g: (
@@ -118,65 +152,92 @@ def sort_open_goals(goals: list[dict]) -> list[dict]:
 def fmt_minutes(m: int | None) -> str:
     if not m:
         return ""
-    if m % 60 == 0:
+    if m % 60 == 0 and m >= 60:
         return f"{m // 60}h"
     if m > 60:
         return f"{m // 60}h {m % 60}m"
     return f"{m}m"
 
 
-def goal_row(goal: dict, status: str) -> str:
-    title = html.escape(goal.get("title", goal.get("id", "")))
-    desc = html.escape(goal.get("description", ""))
-    priority = goal.get("priority", "medium")
+def goal_meta(goal: dict) -> str:
+    bits = []
     minutes = fmt_minutes(goal.get("target_minutes"))
-    window = goal.get("window", "any")
-
-    meta_bits = []
     if minutes:
-        meta_bits.append(minutes)
+        bits.append(minutes)
+    window = goal.get("window", "any")
     if window and window != "any":
-        meta_bits.append(window)
+        bits.append(window)
+    priority = goal.get("priority", "medium")
     if priority == "high":
-        meta_bits.append("high priority")
-    meta = " · ".join(meta_bits)
-
-    return f"""
-      <li class="goal goal--{status}">
-        <div class="goal__main">
-          <div class="goal__title">{title}</div>
-          {f'<div class="goal__desc">{desc}</div>' if desc else ''}
-        </div>
-        <div class="goal__meta">{html.escape(meta)}</div>
-      </li>"""
+        bits.append("high")
+    return " · ".join(bits)
 
 
-def section(label: str, items_html: str) -> str:
-    if not items_html.strip():
+def next_up_html(open_goals: list[dict]) -> str:
+    if not open_goals:
         return ""
+    top = open_goals[:3]
+    rows = []
+    for g in top:
+        title = html.escape(g.get("title", g.get("id", "")))
+        meta = html.escape(goal_meta(g))
+        rows.append(f"""
+        <li class="up">
+          <span class="up__title">{title}</span>
+          <span class="up__meta">{meta}</span>
+        </li>""")
     return f"""
-    <section class="section">
-      <h2 class="section__label">{label}</h2>
-      <ul class="goals">{items_html}
+    <section class="block">
+      <h2 class="block__label">Next up</h2>
+      <ul class="up-list">{''.join(rows)}
       </ul>
     </section>"""
 
 
-def render_html(*, settings: dict, goals_data: dict, state: dict, now: datetime) -> str:
-    active = [g for g in goals_data.get("goals", []) if g.get("active", True)]
+def tracker_row(goal: dict, history: list[tuple[str, str]], today_str: str) -> str:
+    title = html.escape(goal.get("title", goal.get("id", "")))
+    meta = html.escape(goal_meta(goal))
+
+    cells = []
+    for d, status in history:
+        is_today = d == today_str
+        title_attr = html.escape(d)
+        cell_class = f"cell cell--{status}" + (" cell--today" if is_today else "")
+        cells.append(f'<span class="{cell_class}" title="{title_attr}: {status}"></span>')
+
+    streak = current_streak(history, today_str)
+    streak_html = (
+        f'<span class="streak streak--on">{streak}</span>'
+        if streak > 0
+        else '<span class="streak streak--off">—</span>'
+    )
+
+    return f"""
+      <li class="row">
+        <div class="row__name">
+          <div class="row__title">{title}</div>
+          {f'<div class="row__meta">{meta}</div>' if meta else ''}
+        </div>
+        <div class="row__grid">{''.join(cells)}</div>
+        <div class="row__streak">{streak_html}</div>
+      </li>"""
+
+
+def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, dict],
+                today: datetime, now: datetime) -> str:
+    today_str = today.strftime("%Y-%m-%d")
+    state = recent_states[today_str]
     completions = state.get("completions", [])
     notifications = state.get("notifications_sent", [])
 
-    statuses = {g["id"]: status_for(g["id"], completions) for g in active}
-    open_goals = [g for g in active if statuses[g["id"]] == "open"]
-    done_goals = [g for g in active if statuses[g["id"]] == "done"]
-    partial_goals = [g for g in active if statuses[g["id"]] == "partial"]
-    skipped_goals = [g for g in active if statuses[g["id"]] == "skipped"]
+    all_goals = goals_data.get("goals", [])
+    active = [g for g in all_goals if g.get("active", True)]
 
-    open_goals = sort_open_goals(open_goals)
+    statuses = {g["id"]: status_for(g["id"], completions) for g in active}
+    open_goals = sort_open([g for g in active if statuses[g["id"]] == "open"])
 
     n_total = len(active)
-    n_done = len(done_goals) + len(partial_goals)
+    n_done = sum(1 for s in statuses.values() if s in ("done", "partial"))
     pct_done = (n_done / n_total * 100) if n_total else 0
 
     day = settings.get("day", {})
@@ -187,22 +248,19 @@ def render_html(*, settings: dict, goals_data: dict, state: dict, now: datetime)
     time_label = now.strftime("%-I:%M %p").lower()
     pct_day = int(frac * 100)
 
-    last_notif = ""
-    if notifications:
-        n = notifications[-1]
-        last_notif = f"Last nudge — {html.escape(n.get('level', '?'))} at {html.escape(n.get('at', '?'))}"
-    else:
-        last_notif = "No nudges yet today."
-
-    open_html = "".join(goal_row(g, "open") for g in open_goals)
-    done_html = "".join(goal_row(g, "done") for g in done_goals + partial_goals)
-    skipped_html = "".join(goal_row(g, "skipped") for g in skipped_goals)
-
-    sections = (
-        section("To do", open_html)
-        + section("Done", done_html)
-        + section("Skipped", skipped_html)
+    last_notif = (
+        f"Last nudge — {html.escape(notifications[-1].get('level', '?'))} at "
+        f"{html.escape(notifications[-1].get('at', '?'))}"
+        if notifications
+        else "No nudges yet today."
     )
+
+    next_up = next_up_html(open_goals)
+
+    tracker_rows = []
+    for g in active:
+        history = history_for(g["id"], recent_states)
+        tracker_rows.append(tracker_row(g, history, today_str))
 
     return f"""<!doctype html>
 <html lang="en">
@@ -219,9 +277,11 @@ def render_html(*, settings: dict, goals_data: dict, state: dict, now: datetime)
     --ink: #2c2418;
     --muted: #8b7e6b;
     --line: #e8e1d4;
+    --line-strong: #d8cfbd;
     --sage: #6b7f5a;
-    --done-bg: #f1ede3;
-    --skip: #a89a83;
+    --sage-soft: #b3c0a3;
+    --skip: #b8aa92;
+    --today: #c8a05a;
   }}
   * {{ box-sizing: border-box; }}
   html, body {{ margin: 0; padding: 0; }}
@@ -234,15 +294,16 @@ def render_html(*, settings: dict, goals_data: dict, state: dict, now: datetime)
     -webkit-font-smoothing: antialiased;
   }}
   .page {{
-    max-width: 640px;
+    max-width: 720px;
     margin: 0 auto;
-    padding: 88px 32px 64px;
+    padding: 72px 32px 48px;
   }}
 
-  header.head {{
+  /* ───── Dashboard zone ───── */
+  header.dash {{
     border-bottom: 1px solid var(--line);
     padding-bottom: 28px;
-    margin-bottom: 36px;
+    margin-bottom: 32px;
   }}
   .date {{
     font-family: 'Fraunces', Georgia, serif;
@@ -250,12 +311,12 @@ def render_html(*, settings: dict, goals_data: dict, state: dict, now: datetime)
     font-size: 44px;
     line-height: 1.1;
     letter-spacing: -0.01em;
-    margin: 0 0 16px;
+    margin: 0 0 14px;
   }}
   .status-line {{
     font-size: 17px;
     color: var(--ink);
-    margin: 0 0 24px;
+    margin: 0 0 22px;
   }}
   .progress {{
     display: flex;
@@ -282,64 +343,113 @@ def render_html(*, settings: dict, goals_data: dict, state: dict, now: datetime)
     color: var(--ink);
   }}
 
-  .section {{
-    margin: 36px 0;
-  }}
-  .section__label {{
+  /* ───── Block / section ───── */
+  .block {{ margin: 32px 0; }}
+  .block__label {{
     font-family: 'Inter', sans-serif;
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.18em;
     color: var(--muted);
-    margin: 0 0 16px;
+    margin: 0 0 14px;
     font-weight: 600;
   }}
-  .goals {{ list-style: none; padding: 0; margin: 0; }}
-  .goal {{
+
+  /* ───── Next up list ───── */
+  .up-list {{ list-style: none; padding: 0; margin: 0; }}
+  .up {{
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    gap: 24px;
-    padding: 16px 0;
+    padding: 10px 0;
     border-bottom: 1px solid var(--line);
+    gap: 16px;
   }}
-  .goal:last-child {{ border-bottom: none; }}
-  .goal__main {{ flex: 1; min-width: 0; }}
-  .goal__title {{
+  .up:last-child {{ border-bottom: none; }}
+  .up__title {{
     font-family: 'Fraunces', Georgia, serif;
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 500;
-    letter-spacing: -0.005em;
   }}
-  .goal__desc {{
-    color: var(--muted);
-    font-size: 14px;
-    margin-top: 4px;
-  }}
-  .goal__meta {{
+  .up__meta {{
     font-size: 12px;
     color: var(--muted);
     text-transform: lowercase;
     letter-spacing: 0.04em;
-    white-space: nowrap;
     flex-shrink: 0;
   }}
-  .goal--done .goal__title,
-  .goal--done .goal__desc {{
-    color: var(--muted);
-    text-decoration: line-through;
-    text-decoration-color: var(--line);
-  }}
-  .goal--skipped .goal__title,
-  .goal--skipped .goal__desc {{
-    color: var(--skip);
-    font-style: italic;
-  }}
 
+  /* ───── Habit list with tracker grid ───── */
+  .tracker-head {{
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }}
+  .tracker-head .legend {{
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }}
+  .rows {{ list-style: none; padding: 0; margin: 0; }}
+  .row {{
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 18px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }}
+  .row:last-child {{ border-bottom: none; }}
+  .row__name {{ min-width: 0; }}
+  .row__title {{
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.3;
+  }}
+  .row__meta {{
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+  }}
+  .row__grid {{
+    display: flex;
+    gap: 3px;
+  }}
+  .cell {{
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    display: inline-block;
+  }}
+  .cell--done {{ background: var(--sage); border-color: var(--sage); }}
+  .cell--partial {{
+    background: linear-gradient(135deg, var(--sage) 0 50%, transparent 50% 100%);
+    border-color: var(--sage);
+  }}
+  .cell--skipped {{ background: var(--skip); border-color: var(--skip); opacity: 0.5; }}
+  .cell--open {{ background: transparent; }}
+  .cell--today {{
+    box-shadow: 0 0 0 1px var(--today);
+  }}
+  .row__streak {{
+    width: 28px;
+    text-align: right;
+    font-feature-settings: "tnum";
+    font-size: 13px;
+  }}
+  .streak--on {{ color: var(--sage); font-weight: 600; }}
+  .streak--off {{ color: var(--muted); }}
+
+  /* ───── Footer ───── */
   footer.foot {{
     border-top: 1px solid var(--line);
-    padding-top: 24px;
-    margin-top: 64px;
+    padding-top: 22px;
+    margin-top: 56px;
     display: flex;
     justify-content: space-between;
     font-size: 12px;
@@ -348,22 +458,27 @@ def render_html(*, settings: dict, goals_data: dict, state: dict, now: datetime)
   }}
   footer.foot .right {{ text-align: right; }}
 
+  /* ───── Dark mode ───── */
   @media (prefers-color-scheme: dark) {{
     :root {{
       --bg: #1c1a16;
       --ink: #f0ebe0;
       --muted: #847b6b;
-      --line: #2e2a23;
+      --line: #2a2620;
+      --line-strong: #3a352c;
       --sage: #8aa177;
-      --done-bg: #25221c;
+      --sage-soft: #4a5a3e;
       --skip: #5e5749;
+      --today: #c8a05a;
     }}
   }}
 </style>
 </head>
 <body>
   <main class="page">
-    <header class="head">
+
+    <!-- Dashboard zone -->
+    <header class="dash">
       <h1 class="date">{html.escape(date_label)}</h1>
       <p class="status-line">{html.escape(line)}</p>
       <div class="progress">
@@ -372,7 +487,18 @@ def render_html(*, settings: dict, goals_data: dict, state: dict, now: datetime)
         <span>{pct_day}% of the day</span>
       </div>
     </header>
-    {sections}
+    {next_up}
+
+    <!-- Habit tracker -->
+    <section class="block">
+      <div class="tracker-head">
+        <h2 class="block__label">Habits</h2>
+        <span class="legend">{HISTORY_DAYS} days · today →</span>
+      </div>
+      <ul class="rows">{''.join(tracker_rows)}
+      </ul>
+    </section>
+
     <footer class="foot">
       <div>{time_label}</div>
       <div class="right">{html.escape(last_notif)}</div>
@@ -401,14 +527,18 @@ def main() -> int:
     rollover = settings.get("day", {}).get("rollover_hour", 3)
 
     today = today_local(tz, rollover)
-    date_str = today.strftime("%Y-%m-%d")
-    state = load_state_for(date_str)
-
+    recent_states = load_recent_states(today, HISTORY_DAYS)
     now = datetime.now(tz)
 
-    html_out = render_html(settings=settings, goals_data=goals, state=state, now=now)
-    OUT_FILE.write_text(html_out)
-    print(f"wrote {OUT_FILE} ({len(html_out)} bytes) for {date_str}")
+    out = render_html(
+        settings=settings,
+        goals_data=goals,
+        recent_states=recent_states,
+        today=today,
+        now=now,
+    )
+    OUT_FILE.write_text(out)
+    print(f"wrote {OUT_FILE} ({len(out)} bytes) for {today.strftime('%Y-%m-%d')}")
     return 0
 
 
