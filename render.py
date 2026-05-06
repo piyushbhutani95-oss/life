@@ -4,7 +4,7 @@ render.py — read goals.yaml + recent state files + settings, write index.html.
 
 The page has two zones:
   1. Dashboard — date, one-line status, progress, next 3 things to do
-  2. Habits — every goal with a 14-day tracker grid + current streak
+  2. Habits — every goal with a 7-day tracker grid + current streak
 
 Run any time the underlying data changes.
 """
@@ -28,7 +28,7 @@ OUT_FILE = ROOT / "index.html"
 PRIORITY_ORDER = {"high": 0, "medium": 1, "low": 2}
 WINDOW_ORDER = {"morning": 0, "afternoon": 1, "evening": 2, "any": 3}
 
-HISTORY_DAYS = 14  # how many days of history to show in the tracker grid
+HISTORY_DAYS = 7  # how many days of history to show in the tracker grid
 
 
 # ---------- loading ----------
@@ -173,54 +173,38 @@ def goal_meta(goal: dict) -> str:
     return " · ".join(bits)
 
 
-def next_up_html(open_goals: list[dict]) -> str:
-    if not open_goals:
-        return ""
-    top = open_goals[:3]
-    rows = []
-    for g in top:
-        title = html.escape(g.get("title", g.get("id", "")))
-        meta = html.escape(goal_meta(g))
-        rows.append(f"""
-        <li class="up">
-          <span class="up__title">{title}</span>
-          <span class="up__meta">{meta}</span>
-        </li>""")
-    return f"""
-    <section class="block">
-      <h2 class="block__label">Next up</h2>
-      <ul class="up-list">{''.join(rows)}
-      </ul>
-    </section>"""
-
-
-def tracker_row(goal: dict, history: list[tuple[str, str]], today_str: str) -> str:
+def tracker_cell(goal: dict, history: list[tuple[str, str]], today_str: str, index: int) -> str:
     title = html.escape(goal.get("title", goal.get("id", "")))
     meta = html.escape(goal_meta(goal))
 
+    today_status = "open"
     cells = []
     for d, status in history:
         is_today = d == today_str
         title_attr = html.escape(d)
         cell_class = f"cell cell--{status}" + (" cell--today" if is_today else "")
         cells.append(f'<span class="{cell_class}" title="{title_attr}: {status}"></span>')
+        if is_today:
+            today_status = status
 
     streak = current_streak(history, today_str)
     streak_html = (
-        f'<span class="streak streak--on">{streak}</span>'
+        f'<span class="streak streak--on">{streak:02d}</span>'
         if streak > 0
-        else '<span class="streak streak--off">—</span>'
+        else '<span class="streak streak--off">··</span>'
     )
 
+    idx = f"{index:02d}"
+
     return f"""
-      <li class="row">
-        <div class="row__name">
-          <div class="row__title">{title}</div>
-          {f'<div class="row__meta">{meta}</div>' if meta else ''}
+      <article class="goal goal--{today_status}">
+        <h3 class="goal__title">{title}</h3>
+        {f'<p class="goal__meta">{meta}</p>' if meta else '<p class="goal__meta">&nbsp;</p>'}
+        <div class="goal__foot">
+          <div class="goal__strip" aria-label="7-day history">{''.join(cells)}</div>
+          <span class="goal__streak">{streak_html}</span>
         </div>
-        <div class="row__grid">{''.join(cells)}</div>
-        <div class="row__streak">{streak_html}</div>
-      </li>"""
+      </article>"""
 
 
 def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, dict],
@@ -244,65 +228,80 @@ def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, di
     frac = day_fraction_elapsed(now, day.get("start_hour", 7), day.get("end_hour", 23))
     line = status_line(active, completions, frac)
 
-    date_label = now.strftime("%A, %B %-d")
-    time_label = now.strftime("%-I:%M %p").lower()
+    weekday_label = now.strftime("%A").upper()
+    monthday_label = now.strftime("%B %-d").upper()
+    year_label = now.strftime("%Y")
+    folio_label = today.strftime("%Y-%m-%d")
+    title_date = now.strftime("%A, %B %-d")
+    time_label = now.strftime("%H:%M")
+    tz_label = settings.get("user", {}).get("timezone", "LOCAL").upper()
     pct_day = int(frac * 100)
+    pct_done_int = int(round(pct_done))
 
     last_notif = (
-        f"Last nudge — {html.escape(notifications[-1].get('level', '?'))} at "
+        f"LAST NUDGE · {html.escape(notifications[-1].get('level', '?')).upper()} AT "
         f"{html.escape(notifications[-1].get('at', '?'))}"
         if notifications
-        else "No nudges yet today."
+        else "NO NUDGES SENT TODAY"
     )
 
-    next_up = next_up_html(open_goals)
-
-    tracker_rows = []
-    for g in active:
+    cells_html = []
+    for i, g in enumerate(active, start=1):
         history = history_for(g["id"], recent_states)
-        tracker_rows.append(tracker_row(g, history, today_str))
+        cells_html.append(tracker_cell(g, history, today_str, i))
 
     return f"""<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>{html.escape(date_label)} — Life</title>
+<title>{html.escape(title_date)} — Life · Folio {folio_label}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400;1,8..60,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="page">
+  <div class="paper">
+    <main class="sheet">
 
-    <!-- Dashboard zone -->
-    <header class="dash">
-      <h1 class="date">{html.escape(date_label)}</h1>
-      <p class="status-line">{html.escape(line)}</p>
-      <div class="progress">
-        <span class="progress__count">{n_done} of {n_total}</span>
-        <span class="progress__bar"><span class="progress__fill" style="width: {pct_done:.1f}%"></span></span>
-        <span>{pct_day}% of the day</span>
-      </div>
-    </header>
-    {next_up}
+      <header class="masthead">
+        <div class="masthead__date">
+          <span class="masthead__weekday">{weekday_label}</span>
+          <span class="masthead__monthday">{monthday_label}</span>
+        </div>
 
-    <!-- Habit tracker -->
-    <section class="block">
-      <div class="tracker-head">
-        <h2 class="block__label">Habits</h2>
-        <span class="legend">{HISTORY_DAYS} days · today →</span>
-      </div>
-      <ul class="rows">{''.join(tracker_rows)}
-      </ul>
-    </section>
+        <div class="metric">
+          <span class="metric__label">done</span>
+          <span class="metric__value"><em class="metric__num">{n_done:02d}</em><span class="metric__slash">/</span><span class="metric__total">{n_total:02d}</span></span>
+        </div>
 
-    <footer class="foot">
-      <div>{time_label}</div>
-      <div class="right">{html.escape(last_notif)}</div>
-    </footer>
-  </main>
+        <div class="metric">
+          <span class="metric__label">progress</span>
+          <span class="metric__value"><em class="metric__num">{pct_done_int}</em><span class="metric__unit">%</span></span>
+        </div>
+
+        <div class="metric">
+          <span class="metric__label">day</span>
+          <span class="metric__value"><em class="metric__num">{pct_day}</em><span class="metric__unit">%</span></span>
+        </div>
+
+        <div class="masthead__time">{time_label}</div>
+      </header>
+
+      <p class="status">{html.escape(line)}</p>
+
+      <section class="grid" aria-label="Daily goals">
+        {''.join(cells_html)}
+      </section>
+
+      <footer class="foot">
+        <span>{folio_label}</span>
+        <span class="foot__nudge">{html.escape(last_notif.lower())}</span>
+      </footer>
+
+    </main>
+  </div>
 </body>
 </html>
 """

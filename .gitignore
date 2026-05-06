@@ -10,3 +10,4 @@ secrets/
 google-token.json
 google-credentials.json
 .DS_Store
+.Rhistory
