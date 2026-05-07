@@ -66,9 +66,18 @@ def load_recent_states(today: datetime, days: int) -> dict[str, dict]:
 
 # ---------- computation ----------
 
-def day_fraction_elapsed(now: datetime, start_hour: int, end_hour: int) -> float:
-    start = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
-    end = now.replace(hour=end_hour, minute=0, second=0, microsecond=0)
+def _split_hour(hr: float) -> tuple[int, int]:
+    """Split a fractional hour like 5.5 into (5, 30)."""
+    h = int(hr)
+    m = int(round((hr - h) * 60))
+    return h, m
+
+
+def day_fraction_elapsed(now: datetime, start_hour: float, end_hour: float) -> float:
+    sh, sm = _split_hour(start_hour)
+    eh, em = _split_hour(end_hour)
+    start = now.replace(hour=sh, minute=sm, second=0, microsecond=0)
+    end = now.replace(hour=eh, minute=em, second=0, microsecond=0)
     if now <= start:
         return 0.0
     if now >= end:
