@@ -16,6 +16,9 @@
 #                    low    → quick check-ins; only nudged late
 #   window:          morning | afternoon | evening | any
 #   active:          true / false — set false to pause without deleting
+#   nudge_at:        when this goal first nudges. Either a single "HH:MM"
+#                    string, or a list ["HH:MM", ...] for multi check-ins.
+#                    Omit for "TBD — flexible, no nudge until decided".
 
 goals:
 
@@ -25,6 +28,24 @@ goals:
     priority: high
     window: morning
     active: true
+    nudge_at: "06:00"   # check-in if I haven't woken/marked done by then
+
+  # ── mind & practice (early-morning block) ───────────
+  - id: meditate
+    title: Meditate
+    target_minutes: 15
+    priority: medium
+    window: morning
+    active: true
+    nudge_at: "06:00"
+
+  - id: journal
+    title: Journal
+    target_minutes: 15
+    priority: medium
+    window: morning   # actually morning, not evening — done first thing
+    active: true
+    nudge_at: "06:15"
 
   # ── body & care (quick check-ins) ───────────────────
   - id: bath
@@ -33,6 +54,7 @@ goals:
     priority: low
     window: morning
     active: true
+    nudge_at: "06:45"   # before the 7am meeting
 
   - id: skincare
     title: Skin care
@@ -40,6 +62,7 @@ goals:
     priority: low
     window: morning
     active: true
+    nudge_at: "06:45"   # right after bath
 
   - id: multivitamins
     title: Multivitamins
@@ -47,6 +70,7 @@ goals:
     priority: low
     window: morning
     active: true
+    nudge_at: "08:00"
 
   - id: b12
     title: B12
@@ -54,6 +78,7 @@ goals:
     priority: low
     window: morning
     active: true
+    nudge_at: "08:00"
 
   - id: creatine
     title: Creatine
@@ -61,6 +86,7 @@ goals:
     priority: low
     window: any
     active: true
+    nudge_at: "08:00"
 
   # ── movement ────────────────────────────────────────
   - id: workout
@@ -70,6 +96,7 @@ goals:
     priority: high
     window: any
     active: true
+    nudge_at: "13:00"   # flexible: usually morning, sometimes evening — midday catch-up
 
   - id: step-out
     title: Step out
@@ -78,21 +105,32 @@ goals:
     priority: medium
     window: afternoon
     active: true
+    nudge_at: "18:00"
 
-  # ── mind & practice ─────────────────────────────────
-  - id: meditate
-    title: Meditate
-    target_minutes: 15
-    priority: medium
+  # ── deep work (flexible — evening catch-ups for now) ─
+  - id: write
+    title: Write
+    target_minutes: 60
+    priority: high
     window: morning
     active: true
+    nudge_at: "17:00"   # tentative — refine after a week of usage
 
-  - id: journal
-    title: Journal
-    target_minutes: 15
-    priority: medium
-    window: evening
+  - id: code
+    title: Code
+    target_minutes: 90
+    priority: high
+    window: any
     active: true
+    nudge_at: "18:30"   # tentative — refine after a week of usage
+
+  - id: language
+    title: Language
+    target_minutes: 20
+    priority: medium
+    window: any
+    active: true
+    nudge_at: "20:30"   # tentative — refine after a week of usage
 
   - id: read
     title: Read
@@ -101,49 +139,33 @@ goals:
     priority: high
     window: evening
     active: true
+    nudge_at: "21:30"   # before bed
 
-  - id: write
-    title: Write
-    target_minutes: 60
-    priority: high
-    window: morning
-    active: true
-
-  - id: code
-    title: Code
-    target_minutes: 90
-    priority: high
-    window: any
-    active: true
-
+  # ── practice ────────────────────────────────────────
   - id: guitar
     title: Practice guitar
     target_minutes: 30
     priority: medium
     window: any
     active: true
-
-  - id: language
-    title: Language
-    target_minutes: 20
-    priority: medium
-    window: any
-    active: true
+    nudge_at: "20:00"   # flexible: 6:30am or 8pm — default 8pm
 
   - id: course
     title: Course
     target_minutes: 30
     priority: medium
-    window: any
+    window: evening
     active: true
+    nudge_at: "19:00"   # tentative
 
   # ── people ──────────────────────────────────────────
   - id: talk-to-people
     title: Talk to people
     description: Real conversation — call, in person, voice note
     priority: medium
-    window: any
+    window: evening
     active: true
+    nudge_at: "20:00"   # evening check-in
 
   - id: respond-to-people
     title: Respond to people
@@ -151,3 +173,4 @@ goals:
     priority: medium
     window: any
     active: true
+    nudge_at: ["10:00", "15:00", "21:00"]   # multi check-in

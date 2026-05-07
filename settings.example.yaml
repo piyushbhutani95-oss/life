@@ -8,14 +8,15 @@ user:
 # rollover_hour: at this local hour, the day flips. Late-night work before
 # rollover still counts toward "yesterday".
 day:
-  start_hour: 7
+  start_hour: 5
   end_hour: 23
   rollover_hour: 3
 
-# Don't push between these hours.
+# Times when nudges are silenced. List of "HH:MM-HH:MM" windows.
+# Wraparound (overnight) is OK.
 quiet_hours:
-  start: "23:00"
-  end: "07:00"
+  - "23:00-05:30"   # overnight
+  - "07:00-08:00"   # daily meeting
 
 # ntfy is the "mailbox" — a free push service. Pick a long random topic name
 # (treat it like a password). Subscribe to it from the ntfy Android app.
@@ -28,7 +29,7 @@ calendar:
   id: primary
   event_prefix: "🎯 Life:"
   marker: "auto-scheduled-by:life-os"
-  color_id: 9   # Google Calendar's "Blueberry"
+  color_id: 9
 
 # How "behind" do you have to be before each escalation level fires?
 # Numbers are fractions of the waking day elapsed.
