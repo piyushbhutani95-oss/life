@@ -75,4 +75,12 @@ notifications_sent:
   nudge_time: '20:00'
   level: firm
   at: '20:59'
+- goal_id: read
+  nudge_time: '21:30'
+  level: firm
+  at: '21:59'
+- goal_id: respond-to-people
+  nudge_time: '21:00'
+  level: firm
+  at: '21:59'
 scheduled_blocks: []
