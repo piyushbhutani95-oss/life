@@ -1,0 +1,321 @@
+/* V1 — Pleasant paper planner. All colors derived from CSS vars set on .v1-root */
+
+.v1-root {
+  /* Defaults — overridden inline by V1 component */
+  --paper-bg: #f4ead0;
+  --paper-card: #e0cfa0;
+  --ink: #3a2f1e;
+  --accent: #c47a3a;
+  --c-health: #c98a4b;
+  --c-mind:   #a87c5b;
+  --c-skills: #d9a35a;
+  --c-social: #b06a4f;
+
+  /* Derived */
+  --ink-soft: color-mix(in oklab, var(--ink) 70%, var(--paper-bg));
+  --muted:    color-mix(in oklab, var(--ink) 45%, var(--paper-bg));
+  --rule:     color-mix(in oklab, var(--ink) 18%, var(--paper-bg));
+  --rule-soft:color-mix(in oklab, var(--ink) 10%, var(--paper-bg));
+  --paper-card-hover: color-mix(in oklab, var(--paper-card) 88%, var(--ink));
+
+  position: relative;
+  min-height: 100vh;
+  background: var(--paper-bg);
+  background-image:
+    linear-gradient(to right, var(--rule-soft) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--rule-soft) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--ink);
+  font-family: 'Newsreader', 'Source Serif Pro', Georgia, serif;
+  padding: 32px 36px 80px;
+  overflow-x: hidden;
+}
+
+/* Header */
+.v1-header {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 28px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.v1-headline {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.v1-day {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  align-self: center;
+}
+
+.v1-date {
+  font-family: 'Newsreader', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(48px, 7vw, 88px);
+  line-height: 0.9;
+  margin: 0;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.v1-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  margin-left: auto;
+  align-self: center;
+}
+
+/* Progress */
+.v1-progress-line {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 460px;
+}
+.v1-progress-track {
+  flex: 1;
+  height: 6px;
+  background: var(--rule-soft);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.v1-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width .3s ease;
+}
+.v1-progress-num {
+  font-family: 'Newsreader', serif;
+  font-style: italic;
+  font-size: 22px;
+  color: var(--ink);
+  line-height: 1;
+}
+.v1-progress-suf { font-size: 13px; color: var(--muted); margin-left: 1px; }
+
+/* Filters */
+.v1-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.v1-filter {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--paper-card);
+  border: 1px solid var(--rule);
+  padding: 6px 12px 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: lowercase;
+  color: var(--ink-soft);
+  transition: all .15s ease;
+}
+.v1-filter:hover {
+  background: var(--paper-card-hover);
+  transform: translateY(-1px);
+}
+.v1-filter-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.v1-filter-all .v1-filter-dot { background: var(--ink); }
+.v1-filter-health .v1-filter-dot { background: var(--c-health); }
+.v1-filter-mind .v1-filter-dot { background: var(--c-mind); }
+.v1-filter-skills .v1-filter-dot { background: var(--c-skills); }
+.v1-filter-social .v1-filter-dot { background: var(--c-social); }
+.v1-filter.is-active {
+  background: var(--ink);
+  color: var(--paper-bg);
+  border-color: var(--ink);
+}
+.v1-filter.is-active .v1-filter-count { color: var(--paper-card); }
+.v1-filter-count { font-size: 9px; opacity: 0.7; margin-left: 1px; }
+
+/* Sections */
+.v1-main { display: flex; flex-direction: column; gap: 28px; }
+
+.v1-section { position: relative; padding: 6px 0 18px; }
+
+.v1-sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.v1-sec-title {
+  font-family: 'Newsreader', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 30px;
+  margin: 0;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.v1-sec-range {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.v1-sec-rule { flex: 1; height: 1px; background: var(--rule); }
+.v1-sec-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+/* Cards */
+.v1-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+}
+.v1-card {
+  position: relative;
+  background: var(--paper-card);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 12px 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  transition: all .18s ease;
+  min-height: 92px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.03), 0 4px 12px -8px rgba(0,0,0,0.18);
+}
+.v1-card:hover {
+  background: var(--paper-card-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 18px -8px rgba(0,0,0,0.25);
+}
+.v1-card::before {
+  content: '';
+  position: absolute;
+  left: 14px; right: 14px; top: 0;
+  height: 3px;
+  background: var(--card-accent, var(--muted));
+  border-radius: 0 0 3px 3px;
+  opacity: 0.85;
+}
+.v1-card.v1-cat-health   { --card-accent: var(--c-health); }
+.v1-card.v1-cat-mind     { --card-accent: var(--c-mind); }
+.v1-card.v1-cat-skills   { --card-accent: var(--c-skills); }
+.v1-card.v1-cat-social   { --card-accent: var(--c-social); }
+
+.v1-card.is-done { opacity: 0.5; background: var(--paper-bg); }
+.v1-card.is-done .v1-card-title { text-decoration: line-through; text-decoration-thickness: 1px; }
+
+.v1-check {
+  position: absolute;
+  top: 10px; right: 10px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--rule);
+  background: var(--paper-bg);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--paper-bg);
+  transition: all .15s ease;
+  padding: 0;
+}
+.v1-check:hover { border-color: var(--ink); }
+.v1-card.is-done .v1-check {
+  background: var(--card-accent, var(--ink));
+  border-color: var(--card-accent, var(--ink));
+  color: var(--ink);
+}
+
+.v1-card-title {
+  font-family: 'Newsreader', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.1;
+  margin: 0;
+  padding-right: 22px;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+
+.v1-card-streak {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+.v1-streak-cells { display: flex; gap: 2px; flex: 1; }
+.v1-sc {
+  flex: 1;
+  height: 6px;
+  border-radius: 1.5px;
+  background: var(--rule-soft);
+}
+.v1-card.v1-cat-health .v1-sc.on { background: var(--c-health); }
+.v1-card.v1-cat-mind   .v1-sc.on { background: var(--c-mind); }
+.v1-card.v1-cat-skills .v1-sc.on { background: var(--c-skills); }
+.v1-card.v1-cat-social .v1-sc.on { background: var(--c-social); }
+.v1-sc.today { outline: 1.5px solid var(--ink); outline-offset: 1px; height: 8px; }
+
+.v1-streak-flame {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--paper-bg);
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  letter-spacing: 0.04em;
+}
+
+/* Footer */
+.v1-footer {
+  margin-top: 32px;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+}
+.v1-foot-mid { color: var(--muted); }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .v1-root { padding: 22px 18px 60px; }
+  .v1-time { margin-left: 0; }
+  .v1-cards { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .v1-sec-title { font-size: 24px; }
+}
+
+@media (max-width: 540px) {
+  .v1-cards { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .v1-card { min-height: 80px; padding: 10px 12px 8px; }
+  .v1-card-title { font-size: 16px; }
+  .v1-headline { gap: 10px; }
+  .v1-date { font-size: 44px; }
+  .v1-filters { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
+  .v1-filter { white-space: nowrap; flex-shrink: 0; }
+}

@@ -11,3 +11,7 @@ google-token.json
 google-credentials.json
 .DS_Store
 .Rhistory
+
+# Stray downloads / local-only artifacts
+*.zip
+.vercel/

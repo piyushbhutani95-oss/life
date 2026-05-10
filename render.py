@@ -2,9 +2,11 @@
 """
 render.py — read goals.yaml + recent state files + settings, write index.html.
 
-The page has two zones:
-  1. Dashboard — date, one-line status, progress, next 3 things to do
-  2. Habits — every goal with a 7-day tracker grid + current streak
+The page is a paper-planner — header (date · progress · filter pills) over
+goals grouped by time-of-day (morning · afternoon · evening · anytime), each
+goal a card with a 7-day streak strip and (when streak ≥ 3) a flame badge.
+Light + dark themes, switchable via the toggle in the header. Filter pills
+isolate categories (health · mind · skills · social).
 
 Run any time the underlying data changes.
 """
@@ -28,7 +30,22 @@ OUT_FILE = ROOT / "index.html"
 PRIORITY_ORDER = {"high": 0, "medium": 1, "low": 2}
 WINDOW_ORDER = {"morning": 0, "afternoon": 1, "evening": 2, "any": 3}
 
-HISTORY_DAYS = 7  # how many days of history to show in the tracker grid
+HISTORY_DAYS = 7  # how many days of history to show in each card's strip
+
+CATEGORIES = [
+    ("all",    "all"),
+    ("health", "health"),
+    ("mind",   "mind"),
+    ("skills", "skills"),
+    ("social", "social"),
+]
+
+SECTIONS = [
+    ("morning",   "morning",   "06 — 12"),
+    ("afternoon", "afternoon", "12 — 18"),
+    ("evening",   "evening",   "18 — 23"),
+    ("any",       "anytime",   ""),
+]
 
 
 # ---------- loading ----------
@@ -104,7 +121,6 @@ def history_for(goal_id: str, recent_states: dict[str, dict]) -> list[tuple[str,
 def current_streak(history: list[tuple[str, str]], today_str: str) -> int:
     """Count consecutive done-or-partial days ending at today (or yesterday if today is open)."""
     days = list(reversed(history))
-    # Skip today if it's still open — streak shouldn't reset just because it's morning
     if days and days[0][0] == today_str and days[0][1] == "open":
         days = days[1:]
     streak = 0
@@ -116,75 +132,15 @@ def current_streak(history: list[tuple[str, str]], today_str: str) -> int:
     return streak
 
 
-def status_line(active_goals: list[dict], completions: list[dict], frac: float) -> str:
-    if not active_goals:
-        return "No goals defined yet — tell Claude what you want to do today."
-    statuses = {g["id"]: status_for(g["id"], completions) for g in active_goals}
-    n_total = len(active_goals)
-    n_done = sum(1 for s in statuses.values() if s in ("done", "partial"))
-    n_skipped = sum(1 for s in statuses.values() if s == "skipped")
-    n_open = n_total - n_done - n_skipped
-
-    if n_open == 0:
-        if n_done == n_total:
-            return "All done. Take the win."
-        return f"Day closed out — {n_done} done, {n_skipped} skipped."
-
-    if frac < 0.20:
-        return f"Just getting started. {n_open} to go."
-
-    expected = frac * n_total
-    actual = n_done + n_skipped
-    delta = expected - actual
-
-    pct_left = int((1 - frac) * 100)
-    if delta < 1.0:
-        return f"On track. {n_done} of {n_total} done."
-    if delta < 3.0:
-        return f"A bit behind. {n_open} open with {pct_left}% of the day left."
-    return f"Behind. {n_open} open and only {pct_left}% of the day remains."
-
-
-def sort_open(goals: list[dict]) -> list[dict]:
-    return sorted(
-        goals,
-        key=lambda g: (
-            PRIORITY_ORDER.get(g.get("priority", "medium"), 1),
-            WINDOW_ORDER.get(g.get("window", "any"), 3),
-            g.get("title", ""),
-        ),
-    )
-
-
 # ---------- rendering ----------
 
-def fmt_minutes(m: int | None) -> str:
-    if not m:
-        return ""
-    if m % 60 == 0 and m >= 60:
-        return f"{m // 60}h"
-    if m > 60:
-        return f"{m // 60}h {m % 60}m"
-    return f"{m}m"
+def category_of(goal: dict) -> str:
+    return goal.get("category", "health")
 
 
-def goal_meta(goal: dict) -> str:
-    bits = []
-    minutes = fmt_minutes(goal.get("target_minutes"))
-    if minutes:
-        bits.append(minutes)
-    window = goal.get("window", "any")
-    if window and window != "any":
-        bits.append(window)
-    priority = goal.get("priority", "medium")
-    if priority == "high":
-        bits.append("high")
-    return " · ".join(bits)
-
-
-def tracker_cell(goal: dict, history: list[tuple[str, str]], today_str: str, index: int) -> str:
+def goal_card(goal: dict, history: list[tuple[str, str]], today_str: str) -> str:
     title = html.escape(goal.get("title", goal.get("id", "")))
-    meta = html.escape(goal_meta(goal))
+    cat = category_of(goal)
 
     today_status = "open"
     cells = []
@@ -197,23 +153,61 @@ def tracker_cell(goal: dict, history: list[tuple[str, str]], today_str: str, ind
             today_status = status
 
     streak = current_streak(history, today_str)
-    streak_html = (
-        f'<span class="streak streak--on">{streak:02d}</span>'
-        if streak > 0
-        else '<span class="streak streak--off">··</span>'
+    flame = (
+        f'<span class="goal__flame">✦ {streak:02d}</span>'
+        if streak >= 3
+        else ''
     )
 
-    idx = f"{index:02d}"
-
     return f"""
-      <article class="goal goal--{today_status}">
-        <h3 class="goal__title">{title}</h3>
-        {f'<p class="goal__meta">{meta}</p>' if meta else '<p class="goal__meta">&nbsp;</p>'}
-        <div class="goal__foot">
-          <div class="goal__strip" aria-label="7-day history">{''.join(cells)}</div>
-          <span class="goal__streak">{streak_html}</span>
+        <article class="goal goal--cat-{cat} goal--{today_status}" data-cat="{cat}">
+          <h3 class="goal__title">{title}</h3>
+          <div class="goal__foot">
+            <div class="goal__strip" aria-label="{HISTORY_DAYS}-day history">{''.join(cells)}</div>
+            {flame}
+          </div>
+        </article>"""
+
+
+def section_block(window_key: str, label: str, range_label: str,
+                  goals: list[dict], recent_states: dict, today_str: str) -> str:
+    if not goals:
+        return ""
+    cards = "".join(
+        goal_card(g, history_for(g["id"], recent_states), today_str) for g in goals
+    )
+    range_html = (
+        f'<span class="sec-range">{range_label}</span>' if range_label else ''
+    )
+    return f"""
+      <section class="section" data-window="{window_key}">
+        <header class="sec-head">
+          <h2 class="sec-title">{label}</h2>
+          {range_html}
+          <span class="sec-rule"></span>
+          <span class="sec-count">{len(goals):02d}</span>
+        </header>
+        <div class="cards">{cards}
         </div>
-      </article>"""
+      </section>"""
+
+
+def filter_pills(active_goals: list[dict]) -> str:
+    by_cat: dict[str, int] = {"all": len(active_goals)}
+    for g in active_goals:
+        c = category_of(g)
+        by_cat[c] = by_cat.get(c, 0) + 1
+
+    pills = []
+    for cid, label in CATEGORIES:
+        count = by_cat.get(cid, 0)
+        pills.append(
+            f'<button class="pill pill--{cid}" data-filter="{cid}" type="button">'
+            f'<span class="pill__dot"></span>{label}'
+            f'<span class="pill__count">{count}</span>'
+            f'</button>'
+        )
+    return f'<nav class="filters" aria-label="Filter by category">{"".join(pills)}</nav>'
 
 
 def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, dict],
@@ -227,37 +221,74 @@ def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, di
     active = [g for g in all_goals if g.get("active", True)]
 
     statuses = {g["id"]: status_for(g["id"], completions) for g in active}
-    open_goals = sort_open([g for g in active if statuses[g["id"]] == "open"])
-
     n_total = len(active)
     n_done = sum(1 for s in statuses.values() if s in ("done", "partial"))
     pct_done = (n_done / n_total * 100) if n_total else 0
+    pct_done_int = int(round(pct_done))
 
-    day = settings.get("day", {})
-    frac = day_fraction_elapsed(now, day.get("start_hour", 7), day.get("end_hour", 23))
-    line = status_line(active, completions, frac)
+    # bucket goals into sections by window
+    buckets: dict[str, list[dict]] = {}
+    for g in active:
+        buckets.setdefault(g.get("window", "any"), []).append(g)
 
-    weekday_label = now.strftime("%A").upper()
-    monthday_label = now.strftime("%B %-d").upper()
-    year_label = now.strftime("%Y")
+    section_html = "".join(
+        section_block(wkey, label, rng, buckets.get(wkey, []), recent_states, today_str)
+        for wkey, label, rng in SECTIONS
+    )
+
+    date_label = now.strftime("%-d %B %Y | %A")
     folio_label = today.strftime("%Y-%m-%d")
     title_date = now.strftime("%A, %B %-d")
     time_label = now.strftime("%H:%M")
-    tz_label = settings.get("user", {}).get("timezone", "LOCAL").upper()
-    pct_day = int(frac * 100)
-    pct_done_int = int(round(pct_done))
 
     last_notif = (
-        f"LAST NUDGE · {html.escape(notifications[-1].get('level', '?')).upper()} AT "
-        f"{html.escape(notifications[-1].get('at', '?'))}"
+        f"last nudge · {html.escape(notifications[-1].get('level', '?'))} "
+        f"@ {html.escape(notifications[-1].get('at', '?'))}"
         if notifications
-        else "NO NUDGES SENT TODAY"
+        else "no nudges sent today"
     )
 
-    cells_html = []
-    for i, g in enumerate(active, start=1):
-        history = history_for(g["id"], recent_states)
-        cells_html.append(tracker_cell(g, history, today_str, i))
+    pills = filter_pills(active)
+
+    # tiny inline script: theme + filter persistence + filter behavior
+    script = """
+(function(){
+  var body = document.body;
+  function setTheme(t){
+    body.dataset.theme = t;
+    try { localStorage.setItem('life.theme', t); } catch(e){}
+    document.querySelectorAll('[data-action=theme]').forEach(function(b){ b.textContent = t; });
+  }
+  var savedTheme = 'light';
+  try { savedTheme = localStorage.getItem('life.theme') || 'light'; } catch(e){}
+  setTheme(savedTheme);
+  document.querySelectorAll('[data-action=theme]').forEach(function(b){
+    b.addEventListener('click', function(){
+      setTheme(body.dataset.theme === 'light' ? 'dark' : 'light');
+    });
+  });
+
+  function setFilter(f){
+    body.dataset.filter = f;
+    try { localStorage.setItem('life.filter', f); } catch(e){}
+    document.querySelectorAll('.pill').forEach(function(p){
+      p.classList.toggle('is-active', p.dataset.filter === f);
+    });
+    document.querySelectorAll('.goal').forEach(function(g){
+      g.hidden = !(f === 'all' || g.dataset.cat === f);
+    });
+    document.querySelectorAll('.section').forEach(function(s){
+      s.hidden = s.querySelectorAll('.goal:not([hidden])').length === 0;
+    });
+  }
+  var savedFilter = 'all';
+  try { savedFilter = localStorage.getItem('life.filter') || 'all'; } catch(e){}
+  setFilter(savedFilter);
+  document.querySelectorAll('.pill').forEach(function(p){
+    p.addEventListener('click', function(){ setFilter(p.dataset.filter); });
+  });
+})();
+"""
 
     return f"""<!doctype html>
 <html lang="en">
@@ -267,50 +298,35 @@ def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, di
 <title>{html.escape(title_date)} — Life · Folio {folio_label}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body data-theme="light" data-filter="all">
   <div class="paper">
-    <main class="sheet">
+    <header class="head">
+      <div class="headline">
+        <h1 class="date">{date_label}</h1>
+        <span class="time">{time_label}</span>
+        <button class="theme-btn" data-action="theme" type="button" aria-label="Toggle theme">light</button>
+      </div>
+      <div class="progress">
+        <span class="progress__track"><span class="progress__fill" style="width: {pct_done:.1f}%"></span></span>
+        <span class="progress__num">{pct_done_int}<span class="progress__suf">%</span></span>
+        <span class="progress__count">{n_done:02d} / {n_total:02d}</span>
+      </div>
+      {pills}
+    </header>
 
-      <header class="masthead">
-        <div class="masthead__date">
-          <span class="masthead__weekday">{weekday_label}</span>
-          <span class="masthead__monthday">{monthday_label}</span>
-        </div>
-
-        <div class="metric">
-          <span class="metric__label">done</span>
-          <span class="metric__value"><em class="metric__num">{n_done:02d}</em><span class="metric__slash">/</span><span class="metric__total">{n_total:02d}</span></span>
-        </div>
-
-        <div class="metric">
-          <span class="metric__label">progress</span>
-          <span class="metric__value"><em class="metric__num">{pct_done_int}</em><span class="metric__unit">%</span></span>
-        </div>
-
-        <div class="metric">
-          <span class="metric__label">day</span>
-          <span class="metric__value"><em class="metric__num">{pct_day}</em><span class="metric__unit">%</span></span>
-        </div>
-
-        <div class="masthead__time">{time_label}</div>
-      </header>
-
-      <p class="status">{html.escape(line)}</p>
-
-      <section class="grid" aria-label="Daily goals">
-        {''.join(cells_html)}
-      </section>
-
-      <footer class="foot">
-        <span>{folio_label}</span>
-        <span class="foot__nudge">{html.escape(last_notif.lower())}</span>
-      </footer>
-
+    <main class="main">{section_html}
     </main>
+
+    <footer class="foot">
+      <span>{folio_label}</span>
+      <span class="foot__mid">{html.escape(last_notif)}</span>
+      <span>v1</span>
+    </footer>
   </div>
+  <script>{script}</script>
 </body>
 </html>
 """

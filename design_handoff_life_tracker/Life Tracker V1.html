@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Tracker · V1</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;1,400&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="v1.css">
+
+<style>
+  html, body { margin: 0; padding: 0; background: #fafaf6; font-family: 'Inter Tight', system-ui, sans-serif; }
+  /* Theme toggle button (handoff demo only — replace with your own UI) */
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 99;
+    background: rgba(255,255,255,0.85); backdrop-filter: blur(6px);
+    border: 1px solid rgba(0,0,0,0.1); border-radius: 999px;
+    padding: 6px 14px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <button class="theme-toggle" id="themeBtn">light</button>
+  <div id="app"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Stub the tweak helpers v1.jsx expects, so it runs without the prototype's design-canvas chrome -->
+  <script type="text/babel" data-presets="env,react">
+    window.useTweaks = (defaults) => {
+      const [t, setT] = React.useState(() => ({ ...defaults }));
+      const setTweak = (k, v) => setT(prev => ({ ...prev, [k]: v }));
+      return [t, setTweak];
+    };
+    window.TweaksPanel = ({ children }) => null;   // hidden in handoff
+    window.TweakRadio = () => null;
+    window.TweakSection = () => null;
+  </script>
+
+  <script type="text/babel" src="data.jsx"></script>
+  <script type="text/babel" src="v1.jsx"></script>
+
+  <script type="text/babel" data-presets="env,react">
+    function App() {
+      // Wire the demo theme toggle button to the V1 bus
+      React.useEffect(() => {
+        const btn = document.getElementById('themeBtn');
+        const update = () => { btn.textContent = window.__v1Bus.get().mode; };
+        update();
+        const unsub = window.__v1Bus.subscribe(update);
+        btn.onclick = () => {
+          const next = window.__v1Bus.get().mode === 'light' ? 'dark' : 'light';
+          window.__v1Bus.set({ mode: next });
+          document.body.style.background = next === 'light' ? '#fafaf6' : '#1a1d22';
+        };
+        return unsub;
+      }, []);
+      return <V1 />;
+    }
+    ReactDOM.createRoot(document.getElementById('app')).render(<App />);
+  </script>
+</body>
+</html>

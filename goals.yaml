@@ -15,6 +15,8 @@
 #                    high   → nudged earlier and louder if undone
 #                    low    → quick check-ins; only nudged late
 #   window:          morning | afternoon | evening | any
+#   category:        health | mind | skills | social
+#                    drives the dashboard color stripe + filter pill
 #   active:          true / false — set false to pause without deleting
 #   nudge_at:        when this goal first nudges. Either a single "HH:MM"
 #                    string, or a list ["HH:MM", ...] for multi check-ins.
@@ -27,6 +29,7 @@ goals:
     title: Wake up early
     priority: high
     window: morning
+    category: health
     active: true
     nudge_at: "06:00"   # check-in if I haven't woken/marked done by then
 
@@ -36,6 +39,7 @@ goals:
     target_minutes: 15
     priority: medium
     window: morning
+    category: mind
     active: true
     nudge_at: "06:00"
 
@@ -44,6 +48,7 @@ goals:
     target_minutes: 15
     priority: medium
     window: morning   # actually morning, not evening — done first thing
+    category: mind
     active: true
     nudge_at: "06:15"
 
@@ -53,6 +58,7 @@ goals:
     target_minutes: 10
     priority: low
     window: morning
+    category: health
     active: true
     nudge_at: "06:45"   # before the 7am meeting
 
@@ -61,6 +67,7 @@ goals:
     target_minutes: 5
     priority: low
     window: morning
+    category: health
     active: true
     nudge_at: "06:45"   # right after bath
 
@@ -69,22 +76,7 @@ goals:
     target_minutes: 1
     priority: low
     window: morning
-    active: true
-    nudge_at: "08:00"
-
-  - id: b12
-    title: B12
-    target_minutes: 1
-    priority: low
-    window: morning
-    active: true
-    nudge_at: "08:00"
-
-  - id: creatine
-    title: Creatine
-    target_minutes: 1
-    priority: low
-    window: any
+    category: health
     active: true
     nudge_at: "08:00"
 
@@ -95,6 +87,7 @@ goals:
     target_minutes: 45
     priority: high
     window: any
+    category: health
     active: true
     nudge_at: "13:00"   # flexible: usually morning, sometimes evening — midday catch-up
 
@@ -103,16 +96,18 @@ goals:
     description: Fresh air, ideally without headphones
     target_minutes: 15
     priority: medium
-    window: afternoon
+    window: any
+    category: social
     active: true
     nudge_at: "18:00"
 
-  # ── deep work (flexible — evening catch-ups for now) ─
+  # ── deep work ───────────────────────────────────────
   - id: write
     title: Write
     target_minutes: 60
     priority: high
-    window: morning
+    window: evening
+    category: mind
     active: true
     nudge_at: "17:00"   # tentative — refine after a week of usage
 
@@ -120,7 +115,8 @@ goals:
     title: Code
     target_minutes: 90
     priority: high
-    window: any
+    window: evening
+    category: skills
     active: true
     nudge_at: "18:30"   # tentative — refine after a week of usage
 
@@ -128,7 +124,8 @@ goals:
     title: Language
     target_minutes: 20
     priority: medium
-    window: any
+    window: evening
+    category: skills
     active: true
     nudge_at: "20:30"   # tentative — refine after a week of usage
 
@@ -137,7 +134,8 @@ goals:
     description: A book, not feeds
     target_minutes: 30
     priority: high
-    window: evening
+    window: afternoon
+    category: mind
     active: true
     nudge_at: "21:30"   # before bed
 
@@ -146,7 +144,8 @@ goals:
     title: Practice guitar
     target_minutes: 30
     priority: medium
-    window: any
+    window: evening
+    category: skills
     active: true
     nudge_at: "20:00"   # flexible: 6:30am or 8pm — default 8pm
 
@@ -155,22 +154,16 @@ goals:
     target_minutes: 30
     priority: medium
     window: evening
+    category: skills
     active: true
     nudge_at: "19:00"   # tentative
 
   # ── people ──────────────────────────────────────────
-  - id: talk-to-people
-    title: Talk to people
-    description: Real conversation — call, in person, voice note
-    priority: medium
-    window: evening
-    active: true
-    nudge_at: "20:00"   # evening check-in
-
   - id: respond-to-people
     title: Respond to people
     description: Clear messages, don't leave anyone hanging
     priority: medium
     window: any
+    category: social
     active: true
     nudge_at: ["10:00", "15:00", "21:00"]   # multi check-in
