@@ -63,4 +63,8 @@ notifications_sent:
   nudge_time: '15:00'
   level: hard
   at: '18:38'
+- goal_id: course
+  nudge_time: '19:00'
+  level: soft
+  at: '19:52'
 scheduled_blocks: []
