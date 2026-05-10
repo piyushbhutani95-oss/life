@@ -6,5 +6,61 @@ completions:
 - goal_id: tick-test
   status: done
   at: '18:23'
-notifications_sent: []
+notifications_sent:
+- goal_id: wake-early
+  nudge_time: 06:00
+  level: hard
+  at: '18:38'
+- goal_id: meditate
+  nudge_time: 06:00
+  level: hard
+  at: '18:38'
+- goal_id: journal
+  nudge_time: 06:15
+  level: hard
+  at: '18:38'
+- goal_id: bath
+  nudge_time: 06:45
+  level: hard
+  at: '18:38'
+- goal_id: skincare
+  nudge_time: 06:45
+  level: hard
+  at: '18:38'
+- goal_id: multivitamins
+  nudge_time: 08:00
+  level: hard
+  at: '18:38'
+- goal_id: b12
+  nudge_time: 08:00
+  level: hard
+  at: '18:38'
+- goal_id: creatine
+  nudge_time: 08:00
+  level: hard
+  at: '18:38'
+- goal_id: workout
+  nudge_time: '13:00'
+  level: hard
+  at: '18:38'
+- goal_id: step-out
+  nudge_time: '18:00'
+  level: hard
+  at: '18:38'
+- goal_id: write
+  nudge_time: '17:00'
+  level: hard
+  at: '18:38'
+- goal_id: code
+  nudge_time: '18:30'
+  level: hard
+  at: '18:38'
+- goal_id: respond-to-people
+  nudge_time: '10:00'
+  level: hard
+  at: '18:38'
+- goal_id: respond-to-people
+  nudge_time: '15:00'
+  level: hard
+  at: '18:38'
 scheduled_blocks: []
