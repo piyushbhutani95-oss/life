@@ -25,6 +25,13 @@ ntfy:
   server: https://ntfy.sh
   topic: life-os-CHANGE-ME-TO-LONG-RANDOM-STRING
 
+# Vercel webhook for marking goals via notification Yes/No buttons.
+# Deploy api/index.py to Vercel; SHARED_SECRET env var there must equal
+# `shared_secret` here. URL is your project's production domain + /api/mark.
+webhook:
+  url: https://your-vercel-project.vercel.app/api/mark
+  shared_secret: long-random-string-matches-vercel-env
+
 # Google Calendar — used by schedule.py and tick.py (later milestones).
 calendar:
   id: primary

@@ -9,12 +9,22 @@ For each active goal, decides whether to fire a nudge based on:
   - no nudge already sent today for this (goal, nudge_time) pair
   - now is not inside a quiet_hours window
 
-Phase 1 (this file): prints the payload it WOULD send.
-Phase 2: replace the print with an ntfy push (see TODO in emit_payload).
+When a nudge fires, sends one ntfy push per eligible goal. Each push has
+Yes / No action buttons that POST to the Vercel webhook (api/index.py)
+with an X-Secret header. Tap Yes → webhook commits a `done` completion
+to today's state YAML in the repo; render workflow re-renders dashboard.
+
+Settings: reads settings.yaml if present, else settings.example.yaml
+(useful for CI). Three env vars override the sensitive bits — these are
+how GitHub Actions injects secrets:
+  NTFY_TOPIC      → ntfy.topic
+  WEBHOOK_URL     → webhook.url
+  SHARED_SECRET   → webhook.shared_secret
 
 Usage:
-  python3 tick.py              # normal: record nudges to today's state
-  python3 tick.py --dry-run    # print only, don't modify state
+  python3 tick.py              # normal: send pushes + record dedup state
+  python3 tick.py --dry-run    # print only — no pushes, no state writes
+  python3 tick.py --no-push    # record dedup state but skip the actual push
   python3 tick.py --at 13:00   # fake the current time for testing
   python3 tick.py --schedule   # show today's full nudge schedule and exit
 """
@@ -22,7 +32,12 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import sys
+import urllib.error
+import urllib.parse
+import urllib.request
 from datetime import datetime, time, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -32,6 +47,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent
 GOALS_FILE = ROOT / "goals.yaml"
 SETTINGS_FILE = ROOT / "settings.yaml"
+SETTINGS_EXAMPLE = ROOT / "settings.example.yaml"
 STATE_DIR = ROOT / "state"
 
 
@@ -47,6 +63,23 @@ def load_yaml(path: Path) -> dict:
 def save_yaml(path: Path, data: dict) -> None:
     with path.open("w") as f:
         yaml.safe_dump(data, f, sort_keys=False, default_flow_style=False)
+
+
+def load_settings() -> dict:
+    """Real settings.yaml if it exists, else settings.example.yaml.
+    Then apply env-var overrides for the sensitive bits (CI path)."""
+    path = SETTINGS_FILE if SETTINGS_FILE.exists() else SETTINGS_EXAMPLE
+    s = load_yaml(path)
+    overrides = [
+        ("NTFY_TOPIC",    ("ntfy",    "topic")),
+        ("WEBHOOK_URL",   ("webhook", "url")),
+        ("SHARED_SECRET", ("webhook", "shared_secret")),
+    ]
+    for env_key, (section, key) in overrides:
+        v = os.environ.get(env_key)
+        if v:
+            s.setdefault(section, {})[key] = v
+    return s
 
 
 def today_local(tz: ZoneInfo, rollover_hour: int, now: datetime | None = None) -> datetime:
@@ -180,30 +213,6 @@ def escalation_level(eligible_count: int, day_frac: float, settings: dict) -> st
     return "soft"
 
 
-def build_payload(eligible: list[dict], level: str, now: datetime) -> dict:
-    titles = [e["goal"].get("title", e["goal"]["id"]) for e in eligible]
-    if len(titles) == 1:
-        title = titles[0]
-        body = "Did you do this yet?"
-    else:
-        title = f"{len(titles)} goals open"
-        body = " · ".join(titles)
-    return {
-        "level": level,
-        "title": title,
-        "body": body,
-        "goals": [
-            {
-                "id": e["goal"]["id"],
-                "title": e["goal"].get("title", e["goal"]["id"]),
-                "nudge_time": e["nudge_time"],
-            }
-            for e in eligible
-        ],
-        "sent_at": now.strftime("%H:%M"),
-    }
-
-
 def record_nudges(state: dict, eligible: list[dict], level: str, now: datetime) -> None:
     notifs = state.setdefault("notifications_sent", [])
     for e in eligible:
@@ -215,23 +224,102 @@ def record_nudges(state: dict, eligible: list[dict], level: str, now: datetime) 
         })
 
 
-def emit_payload(payload: dict) -> None:
-    """Phase 1: print. TODO: swap in ntfy push when topic is wired up."""
+# ---------- ntfy push ----------
+
+PRIORITY_FOR_LEVEL = {
+    "calm": 2,
+    "soft": 3,
+    "firm": 4,
+    "hard": 5,
+}
+
+
+def build_ntfy_message(*, topic: str, goal: dict, nudge_time: str, level: str,
+                       webhook_url: str | None, secret: str | None) -> dict:
+    """One ntfy JSON message for one goal. Includes Yes/No actions if webhook is configured."""
+    title = goal.get("title", goal["id"])
+    body = "did you do this yet?"
+    if goal.get("target_minutes"):
+        m = goal["target_minutes"]
+        meta = f"{m // 60}h {m % 60}m" if m > 60 else f"{m}m"
+        body = f"{meta} — did you do this yet?"
+
+    msg: dict = {
+        "topic": topic,
+        "title": title,
+        "message": body,
+        "priority": PRIORITY_FOR_LEVEL.get(level, 3),
+    }
+
+    if webhook_url and secret:
+        actions = []
+        for label, status in [("Yes", "done"), ("No", "skipped")]:
+            url = (f"{webhook_url}?goal={urllib.parse.quote(goal['id'])}"
+                   f"&status={status}")
+            actions.append({
+                "action": "http",
+                "label": label,
+                "url": url,
+                "headers": {"X-Secret": secret},
+                "clear": True,
+            })
+        msg["actions"] = actions
+
+    return msg
+
+
+def send_ntfy(server: str, message: dict) -> tuple[int, str]:
+    body = json.dumps(message).encode()
+    req = urllib.request.Request(server, data=body, method="POST")
+    req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            return resp.status, resp.read().decode()[:120]
+    except urllib.error.HTTPError as e:
+        return e.code, e.read().decode()[:200]
+    except Exception as e:
+        return 0, f"{type(e).__name__}: {e}"
+
+
+def emit_pushes(eligible: list[dict], level: str, settings: dict, *,
+                push_enabled: bool, now: datetime) -> None:
+    """Print payload + (optionally) send one ntfy push per goal."""
     bar = "─" * 60
     print(f"\n{bar}")
-    print(f" nudge @ {payload['sent_at']} · level={payload['level'].upper()}")
+    print(f" tick @ {now.strftime('%H:%M')} · level={level.upper()} · {len(eligible)} eligible")
     print(bar)
-    print(f"  title: {payload['title']}")
-    print(f"  body:  {payload['body']}")
-    for g in payload["goals"]:
-        print(f"    • [{g['nudge_time']}] {g['title']} ({g['id']})")
+
+    ntfy_cfg = settings.get("ntfy", {}) or {}
+    server = ntfy_cfg.get("server", "https://ntfy.sh").rstrip("/")
+    topic = ntfy_cfg.get("topic", "")
+    webhook_cfg = settings.get("webhook", {}) or {}
+    webhook_url = webhook_cfg.get("url")
+    secret = webhook_cfg.get("shared_secret")
+
+    can_push = push_enabled and bool(topic)
+    if push_enabled and not topic:
+        print("  ! ntfy topic missing — printing only")
+    if push_enabled and topic and not (webhook_url and secret):
+        print("  ! webhook url/secret missing — sending without Yes/No buttons")
+
+    for e in eligible:
+        g = e["goal"]
+        print(f"  • [{e['nudge_time']}] {g.get('title', g['id'])} ({g['id']})")
+        if not can_push:
+            continue
+        msg = build_ntfy_message(
+            topic=topic, goal=g, nudge_time=e["nudge_time"], level=level,
+            webhook_url=webhook_url, secret=secret,
+        )
+        code, body_preview = send_ntfy(server, msg)
+        ok = "✓" if 200 <= code < 300 else "✗"
+        print(f"      → ntfy {ok} {code} {body_preview}")
     print(bar)
 
 
 # ---------- preview ----------
 
 def show_schedule(goals: list[dict], quiet_windows: list[str]) -> None:
-    """Print a compact daily schedule of all nudge_at times across active goals."""
     rows: list[tuple[str, str, str]] = []
     for g in goals:
         if not g.get("active", True):
@@ -253,9 +341,11 @@ def show_schedule(goals: list[dict], quiet_windows: list[str]) -> None:
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Life-OS watcher tick")
     p.add_argument("--dry-run", action="store_true",
-                   help="Print but don't modify state")
+                   help="Print only — no pushes, no state writes")
+    p.add_argument("--no-push", action="store_true",
+                   help="Record dedup state but skip the actual ntfy push")
     p.add_argument("--at", metavar="HH:MM",
-                   help="Fake current time for testing")
+                   help="Fake the current time for testing")
     p.add_argument("--schedule", action="store_true",
                    help="Show today's full nudge schedule and exit")
     return p.parse_args()
@@ -267,11 +357,11 @@ def main() -> int:
     if not GOALS_FILE.exists():
         print(f"missing {GOALS_FILE}", file=sys.stderr)
         return 1
-    if not SETTINGS_FILE.exists():
-        print(f"missing {SETTINGS_FILE}", file=sys.stderr)
+    if not (SETTINGS_FILE.exists() or SETTINGS_EXAMPLE.exists()):
+        print("missing settings.yaml AND settings.example.yaml", file=sys.stderr)
         return 1
 
-    settings = load_yaml(SETTINGS_FILE)
+    settings = load_settings()
     goals_data = load_yaml(GOALS_FILE)
     quiet = settings.get("quiet_hours", []) or []
     goals = goals_data.get("goals", []) or []
@@ -311,11 +401,11 @@ def main() -> int:
               f"(day {int(frac*100)}% elapsed)")
         return 0
 
-    payload = build_payload(eligible, level, now)
-    emit_payload(payload)
+    push_enabled = not (args.dry_run or args.no_push)
+    emit_pushes(eligible, level, settings, push_enabled=push_enabled, now=now)
 
     if args.dry_run:
-        print("  (dry run — state file not modified)")
+        print("  (dry run — state file not modified, no pushes sent)")
     else:
         record_nudges(state, eligible, level, now)
         save_yaml(state_path_for(today_str), state)

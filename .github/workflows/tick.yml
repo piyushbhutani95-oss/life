@@ -1,0 +1,50 @@
+name: tick
+
+on:
+  schedule:
+    # GitHub cron is UTC. We're at IST (UTC+5:30) so this runs every 15 min
+    # year-round. Quiet hours are enforced inside tick.py against the user's
+    # local clock, so unwanted ticks just exit cleanly.
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tick
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install pyyaml
+
+      - name: Run tick.py
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          SHARED_SECRET: ${{ secrets.SHARED_SECRET }}
+        run: python3 tick.py
+
+      - name: Commit dedup state if changed
+        run: |
+          git config user.name "tick-bot"
+          git config user.email "noreply@github.com"
+          if [ -n "$(git status --porcelain state/)" ]; then
+            git add state/
+            # Pull --rebase first in case the webhook (api/index.py) committed
+            # to state during this run; --autostash keeps our staged changes.
+            git pull --rebase --autostash origin main
+            git commit -m "tick: record nudges sent at $(date -u +%H:%M) UTC"
+            git push
+          else
+            echo "no state changes — nothing to commit"
+          fi
