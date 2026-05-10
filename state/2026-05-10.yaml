@@ -67,4 +67,12 @@ notifications_sent:
   nudge_time: '19:00'
   level: soft
   at: '19:52'
+- goal_id: language
+  nudge_time: '20:30'
+  level: firm
+  at: '20:59'
+- goal_id: guitar
+  nudge_time: '20:00'
+  level: firm
+  at: '20:59'
 scheduled_blocks: []
