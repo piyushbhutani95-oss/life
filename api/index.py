@@ -1,6 +1,10 @@
 """
-api/mark.py — Vercel serverless function that records a goal completion
+api/index.py — Vercel serverless function that records a goal completion
 to today's state YAML in the life repo.
+
+Filename is "index.py" (not "mark.py") because Vercel's Python detection
+only auto-recognizes a small set of standard entrypoint names. The public
+URL stays /api/mark via the rewrite in vercel.json.
 
 Triggered by tapping a Yes/No action button on a phone notification.
 
