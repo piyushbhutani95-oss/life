@@ -9,6 +9,9 @@ completions:
 - goal_id: multivitamins
   status: done
   at: '10:12'
+- goal_id: workout
+  status: done
+  at: '05:34'
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
