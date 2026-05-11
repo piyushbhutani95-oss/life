@@ -2,8 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     { "source": "/api/mark", "destination": "/api/index" }
-  ],
-  "crons": [
-    { "path": "/api/tick", "schedule": "*/15 * * * *" }
   ]
 }
