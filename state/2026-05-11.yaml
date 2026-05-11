@@ -115,4 +115,9 @@ food:
   protein_g: 14
   carbs_g: 30
   fat_g: 8
+- item: medium cappuccino (whole milk)
+  kcal: 130
+  protein_g: 7
+  carbs_g: 10
+  fat_g: 7
 scheduled_blocks: []
