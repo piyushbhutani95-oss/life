@@ -11,7 +11,10 @@ isolate categories (health · mind · skills · social).
 Special case: the `food` goal additionally shows today's kcal sum vs the
 configured target plus a one-line macros readout. Food entries live on
 each day's state YAML under a `food` list — Claude appends entries when
-the user logs meals through the phone.
+the user logs meals through the phone. Food's done/skipped status is
+ALSO computed from that list (not from Yes/No completions) because
+food isn't a yes/no question. It stays "open" during the day and
+auto-strikes after end_hour.
 
 Run any time the underlying data changes.
 """
@@ -109,6 +112,13 @@ def day_fraction_elapsed(now: datetime, start_hour: float, end_hour: float) -> f
     return (now - start).total_seconds() / (end - start).total_seconds()
 
 
+def is_past_end(now: datetime, end_hour: float) -> bool:
+    """True if local clock is past the configured end_hour today."""
+    eh, em = _split_hour(end_hour)
+    end = now.replace(hour=eh, minute=em, second=0, microsecond=0)
+    return now >= end
+
+
 def status_for(goal_id: str, completions: list[dict]) -> str:
     """Latest status for a goal: done | partial | skipped | open."""
     relevant = [c for c in completions if c.get("goal_id") == goal_id]
@@ -148,6 +158,31 @@ def daily_food_totals(food: list[dict] | None) -> dict[str, int]:
             if isinstance(v, (int, float)):
                 totals[k] += int(round(v))
     return totals
+
+
+def food_status_for_day(day_state: dict, is_today: bool, past_end: bool) -> str:
+    """Food status for one day, ignoring completions entirely.
+
+    Food isn't a yes/no question — it's a "how much" question, so done/skipped
+    is derived from whether any food entries exist that day.
+      - today, still in the day:    "open"   (active, no fade)
+      - today, after end_hour:      "done" if any entries logged, else "skipped"
+      - past day:                   "done" if any entries logged, else "skipped"
+    """
+    if is_today and not past_end:
+        return "open"
+    return "done" if (day_state.get("food") or []) else "skipped"
+
+
+def food_history(recent_states: dict[str, dict], today_str: str,
+                 past_end: bool) -> list[tuple[str, str]]:
+    """Drop-in replacement for history_for() that uses food entries instead
+    of completion records."""
+    out = []
+    for d, s in recent_states.items():
+        is_today = (d == today_str)
+        out.append((d, food_status_for_day(s, is_today=is_today, past_end=past_end)))
+    return out
 
 
 # ---------- rendering ----------
@@ -220,14 +255,19 @@ def goal_card(goal: dict, history: list[tuple[str, str]], today_str: str,
 
 def section_block(window_key: str, label: str, range_label: str,
                   goals: list[dict], recent_states: dict, today_str: str,
-                  state: dict, settings: dict) -> str:
+                  state: dict, settings: dict, past_end: bool) -> str:
     if not goals:
         return ""
-    cards = "".join(
-        goal_card(g, history_for(g["id"], recent_states), today_str,
-                  state=state, settings=settings)
-        for g in goals
-    )
+    cards_html = []
+    for g in goals:
+        if g["id"] == FOOD_GOAL_ID:
+            hist = food_history(recent_states, today_str, past_end)
+        else:
+            hist = history_for(g["id"], recent_states)
+        cards_html.append(goal_card(g, hist, today_str,
+                                    state=state, settings=settings))
+    cards = "".join(cards_html)
+
     range_html = (
         f'<span class="sec-range">{range_label}</span>' if range_label else ''
     )
@@ -283,9 +323,13 @@ def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, di
     for g in active:
         buckets.setdefault(g.get("window", "any"), []).append(g)
 
+    day = settings.get("day", {})
+    end_hour = day.get("end_hour", 23)
+    past_end = is_past_end(now, end_hour)
+
     section_html = "".join(
         section_block(wkey, label, rng, buckets.get(wkey, []), recent_states,
-                      today_str, state, settings)
+                      today_str, state, settings, past_end)
         for wkey, label, rng in SECTIONS
     )
 
