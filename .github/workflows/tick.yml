@@ -1,11 +1,12 @@
-name: tick
+name: tick (fallback only)
+
+# Vercel cron is now the primary scheduler — see /api/tick + vercel.json.
+# GitHub Actions cron was firing roughly hourly instead of every 15 min
+# (well-known throttling for low-priority repos), so it's been disabled
+# as the scheduled trigger. Workflow remains available via manual
+# workflow_dispatch as a fallback.
 
 on:
-  schedule:
-    # GitHub cron is UTC. We're at IST (UTC+5:30) so this runs every 15 min
-    # year-round. Quiet hours are enforced inside tick.py against the user's
-    # local clock, so unwanted ticks just exit cleanly.
-    - cron: "*/15 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -40,10 +41,8 @@ jobs:
           git config user.email "noreply@github.com"
           if [ -n "$(git status --porcelain state/)" ]; then
             git add state/
-            # Pull --rebase first in case the webhook (api/index.py) committed
-            # to state during this run; --autostash keeps our staged changes.
             git pull --rebase --autostash origin main
-            git commit -m "tick: record nudges sent at $(date -u +%H:%M) UTC"
+            git commit -m "tick (manual): record nudges sent at $(date -u +%H:%M) UTC"
             git push
           else
             echo "no state changes — nothing to commit"
