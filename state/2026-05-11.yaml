@@ -101,6 +101,10 @@ notifications_sent:
   nudge_time: '20:30'
   level: soft
   at: '20:30'
+- goal_id: read
+  nudge_time: '21:30'
+  level: soft
+  at: '21:30'
 food:
 - item: 50g cooked poha + 2 eggs
   meal: breakfast
