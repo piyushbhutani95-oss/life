@@ -72,4 +72,8 @@ notifications_sent:
   nudge_time: '17:00'
   level: firm
   at: '17:00'
+- goal_id: step-out
+  nudge_time: '18:00'
+  level: soft
+  at: '18:00'
 scheduled_blocks: []
