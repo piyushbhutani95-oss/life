@@ -192,25 +192,22 @@ def category_of(goal: dict) -> str:
 
 
 def food_body(state: dict, settings: dict) -> str:
-    """The kcal/macros block injected into the Food card."""
+    """Compact two-line kcal + macros readout for the Food card."""
     totals = daily_food_totals(state.get("food"))
     targets = settings.get("nutrition", {}) or {}
     kcal_target = int(targets.get("calorie_target", 2200))
-    p_target = int(targets.get("protein_g_target", 130))
-    c_target = int(targets.get("carbs_g_target", 250))
-    f_target = int(targets.get("fat_g_target", 70))
     return (
+        f'<div class="food__stats">'
         f'<p class="food__kcal">'
         f'<span class="food__kcal-num">{totals["kcal"]}</span>'
         f'<span class="food__kcal-sep"> / </span>'
         f'<span class="food__kcal-target">{kcal_target}</span>'
-        f'<span class="food__kcal-unit"> kcal</span>'
+        f'<span class="food__kcal-unit">kcal</span>'
         f'</p>'
         f'<p class="food__macros">'
-        f'p {totals["protein_g"]}/{p_target}'
-        f' · c {totals["carbs_g"]}/{c_target}'
-        f' · f {totals["fat_g"]}/{f_target}'
+        f'p {totals["protein_g"]} · c {totals["carbs_g"]} · f {totals["fat_g"]}'
         f'</p>'
+        f'</div>'
     )
 
 

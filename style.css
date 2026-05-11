@@ -399,40 +399,44 @@ html, body {
 .foot__mid { color: var(--muted); }
 
 /* ── food card ────────────────────────────────────────────── */
+/* Compact stats: small mono, two tight lines. Sits below the title
+   without growing the card much beyond the standard ~92px min-height. */
 
-.food__kcal {
-  margin: 0;
-  font-family: var(--serif);
-  font-style: italic;
-  font-weight: 400;
-  font-size: 22px;
-  line-height: 1;
-  color: var(--ink);
+.food__stats {
   display: flex;
-  align-items: baseline;
-  gap: 1px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: -4px;
+  margin-bottom: -2px;
+}
+.food__kcal,
+.food__macros {
+  margin: 0;
+  font-family: var(--mono);
+  font-style: normal;
+  line-height: 1.2;
+}
+.food__kcal {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--ink);
 }
 .food__kcal-num { color: var(--ink); }
 .food__kcal-sep,
-.food__kcal-target { color: var(--ink-soft); }
+.food__kcal-target { color: var(--ink-soft); font-weight: 400; }
 .food__kcal-unit {
-  font-family: var(--mono);
-  font-style: normal;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 500;
   letter-spacing: 0.16em;
   color: var(--muted);
   text-transform: uppercase;
-  margin-left: 3px;
+  margin-left: 2px;
 }
-
 .food__macros {
-  margin: 0;
-  font-family: var(--mono);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 400;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.10em;
   color: var(--ink-soft);
   text-transform: lowercase;
 }
