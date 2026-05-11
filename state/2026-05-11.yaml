@@ -21,6 +21,9 @@ completions:
 - goal_id: respond-to-people
   status: done
   at: '15:52'
+- goal_id: write
+  status: skipped
+  at: '17:00'
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
