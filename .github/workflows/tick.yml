@@ -1,49 +1,27 @@
-name: tick (fallback only)
+name: tick
 
-# Vercel cron is now the primary scheduler — see /api/tick + vercel.json.
-# GitHub Actions cron was firing roughly hourly instead of every 15 min
-# (well-known throttling for low-priority repos), so it's been disabled
-# as the scheduled trigger. Workflow remains available via manual
-# workflow_dispatch as a fallback.
+# Lightweight ping — hits /api/tick on Vercel. The Vercel handler does
+# all the work (reads goals + state, sends ntfy pushes, commits state).
+#
+# Schedule uses non-:00 offsets (5/20/35/50) to dodge GitHub's
+# top-of-hour high-load throttling. Cron is still best-effort on
+# GitHub Actions — pair with cron-job.org for guaranteed delivery.
 
 on:
+  schedule:
+    - cron: "5,20,35,50 * * * *"
   workflow_dispatch:
 
-permissions:
-  contents: write
-
-concurrency:
-  group: tick
-  cancel-in-progress: false
-
 jobs:
-  tick:
+  ping-tick:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - run: pip install pyyaml
-
-      - name: Run tick.py
+      - name: Hit /api/tick on Vercel
         env:
-          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
-          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
           SHARED_SECRET: ${{ secrets.SHARED_SECRET }}
-        run: python3 tick.py
-
-      - name: Commit dedup state if changed
         run: |
-          git config user.name "tick-bot"
-          git config user.email "noreply@github.com"
-          if [ -n "$(git status --porcelain state/)" ]; then
-            git add state/
-            git pull --rebase --autostash origin main
-            git commit -m "tick (manual): record nudges sent at $(date -u +%H:%M) UTC"
-            git push
-          else
-            echo "no state changes — nothing to commit"
-          fi
+          curl -fsS -X GET \
+            -H "X-Secret: $SHARED_SECRET" \
+            "https://life-sepia-psi.vercel.app/api/tick" \
+            | tee /tmp/tick-response.json
+          echo
