@@ -54,4 +54,16 @@ notifications_sent:
   nudge_time: '15:00'
   level: soft
   at: '15:00'
+- goal_id: food
+  nudge_time: 09:00
+  level: firm
+  at: '17:00'
+- goal_id: food
+  nudge_time: '13:00'
+  level: firm
+  at: '17:00'
+- goal_id: write
+  nudge_time: '17:00'
+  level: firm
+  at: '17:00'
 scheduled_blocks: []
