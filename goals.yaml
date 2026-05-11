@@ -101,6 +101,16 @@ goals:
     active: true
     nudge_at: "18:00"
 
+  # ── intake ──────────────────────────────────────────
+  - id: food
+    title: Food
+    description: Log what you ate via Claude on phone — kcal + macros
+    priority: medium
+    window: any
+    category: health
+    active: true
+    nudge_at: ["09:00", "13:00", "20:00"]   # breakfast · lunch · dinner
+
   # ── deep work ───────────────────────────────────────
   - id: write
     title: Write
