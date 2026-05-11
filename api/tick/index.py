@@ -1,31 +1,34 @@
 """
-api/tick.py — Vercel cron-triggered tick handler.
+api/tick/index.py — Vercel cron-triggered tick handler.
 
-Replaces the GitHub Actions cron, which was firing roughly hourly instead
-of every 15 min (well-known throttling for low-priority GitHub repos).
-Vercel cron fires within ~1 min of schedule.
+Filename + subdir layout (api/tick/index.py instead of api/tick.py) is
+required so Vercel detects this as a SEPARATE serverless function from
+api/index.py. With both files named index.py inside their own dirs,
+Vercel's Python detection treats each as its own function rather than
+routing everything through one entrypoint.
 
-Triggered by Vercel cron (configured in vercel.json) every 15 min. The
-request carries an `Authorization: Bearer <CRON_SECRET>` header that
-Vercel auto-injects; we verify it (or fall back to X-Secret for manual
-test triggers).
+Replaces the GitHub Actions cron, which was firing roughly hourly
+instead of every 15 min. Vercel cron fires within ~1 min of schedule.
+
+Triggered by Vercel cron (configured in vercel.json) every 15 min.
+The request carries `Authorization: Bearer <CRON_SECRET>` which Vercel
+auto-injects; we verify it (or fall back to X-Secret for manual tests).
 
 Reads goals.yaml + settings.example.yaml + today's state YAML via the
 GitHub Contents API. Computes which goals are nudge-eligible right now.
 Sends one ntfy push per eligible goal (with Yes/No action buttons that
-point at /api/mark). Writes updated state (with notifications_sent
-records) back to GitHub.
+point at /api/mark). Writes updated state back to GitHub.
 
-Env vars (set in Vercel project settings):
+Env vars (Vercel project settings):
   GITHUB_TOKEN     fine-grained PAT, contents read+write on the repo
   REPO             "piyushbhutani95-oss/life"
   USER_TZ          "Asia/Kolkata"
   ROLLOVER_HOUR    "3"
-  NTFY_SERVER      "https://ntfy.sh" (optional, default fine)
+  NTFY_SERVER      "https://ntfy.sh" (optional)
   NTFY_TOPIC       the ntfy topic to publish to
-  WEBHOOK_URL      this project's /api/mark URL (e.g. https://life-sepia-psi.vercel.app/api/mark)
-  SHARED_SECRET    secret used by the /api/mark webhook (passed through into Yes/No buttons)
-  CRON_SECRET      auto-injected by Vercel; we just compare against the Authorization header
+  WEBHOOK_URL      this project's /api/mark URL
+  SHARED_SECRET    secret used by /api/mark webhook (also accepted on this endpoint via X-Secret)
+  CRON_SECRET      auto-injected by Vercel when cron is configured
 """
 
 from __future__ import annotations
@@ -312,11 +315,9 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(body).encode())
 
     def _authorized(self) -> bool:
-        # Vercel cron sends: Authorization: Bearer <CRON_SECRET>
         auth = self.headers.get("Authorization", "")
         if CRON_SECRET and auth == f"Bearer {CRON_SECRET}":
             return True
-        # Allow manual triggers via X-Secret (matches the same secret as /api/mark)
         if SHARED_SECRET and self.headers.get("X-Secret", "") == SHARED_SECRET:
             return True
         return False
