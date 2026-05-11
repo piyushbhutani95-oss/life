@@ -398,6 +398,45 @@ html, body {
 }
 .foot__mid { color: var(--muted); }
 
+/* ── food card ────────────────────────────────────────────── */
+
+.food__kcal {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ink);
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+  flex-wrap: wrap;
+}
+.food__kcal-num { color: var(--ink); }
+.food__kcal-sep,
+.food__kcal-target { color: var(--ink-soft); }
+.food__kcal-unit {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-left: 3px;
+}
+
+.food__macros {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+  text-transform: lowercase;
+}
+
 /* ── motion ───────────────────────────────────────────────── */
 
 @keyframes ink-in {

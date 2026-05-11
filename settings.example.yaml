@@ -45,3 +45,12 @@ escalation:
   soft_after: 0.30
   firm_after: 0.50
   hard_after: 0.75
+
+# Daily intake targets. Used by the Food card on the dashboard — the card
+# shows today's kcal sum against `calorie_target` plus a one-line macros
+# readout. Targets are guidance, not hard limits.
+nutrition:
+  calorie_target: 2200
+  protein_g_target: 130
+  carbs_g_target: 250
+  fat_g_target: 70

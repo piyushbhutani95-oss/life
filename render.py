@@ -8,6 +8,11 @@ goal a card with a 7-day streak strip and (when streak ≥ 3) a flame badge.
 Light + dark themes, switchable via the toggle in the header. Filter pills
 isolate categories (health · mind · skills · social).
 
+Special case: the `food` goal additionally shows today's kcal sum vs the
+configured target plus a one-line macros readout. Food entries live on
+each day's state YAML under a `food` list — Claude appends entries when
+the user logs meals through the phone.
+
 Run any time the underlying data changes.
 """
 
@@ -31,6 +36,8 @@ PRIORITY_ORDER = {"high": 0, "medium": 1, "low": 2}
 WINDOW_ORDER = {"morning": 0, "afternoon": 1, "evening": 2, "any": 3}
 
 HISTORY_DAYS = 7  # how many days of history to show in each card's strip
+
+FOOD_GOAL_ID = "food"  # the one goal that gets a kcal/macros readout
 
 CATEGORIES = [
     ("all",    "all"),
@@ -132,13 +139,48 @@ def current_streak(history: list[tuple[str, str]], today_str: str) -> int:
     return streak
 
 
+def daily_food_totals(food: list[dict] | None) -> dict[str, int]:
+    """Sum kcal + macros across a day's food entries. Safe with None / empty."""
+    totals = {"kcal": 0, "protein_g": 0, "carbs_g": 0, "fat_g": 0}
+    for entry in food or []:
+        for k in totals:
+            v = entry.get(k)
+            if isinstance(v, (int, float)):
+                totals[k] += int(round(v))
+    return totals
+
+
 # ---------- rendering ----------
 
 def category_of(goal: dict) -> str:
     return goal.get("category", "health")
 
 
-def goal_card(goal: dict, history: list[tuple[str, str]], today_str: str) -> str:
+def food_body(state: dict, settings: dict) -> str:
+    """The kcal/macros block injected into the Food card."""
+    totals = daily_food_totals(state.get("food"))
+    targets = settings.get("nutrition", {}) or {}
+    kcal_target = int(targets.get("calorie_target", 2200))
+    p_target = int(targets.get("protein_g_target", 130))
+    c_target = int(targets.get("carbs_g_target", 250))
+    f_target = int(targets.get("fat_g_target", 70))
+    return (
+        f'<p class="food__kcal">'
+        f'<span class="food__kcal-num">{totals["kcal"]}</span>'
+        f'<span class="food__kcal-sep"> / </span>'
+        f'<span class="food__kcal-target">{kcal_target}</span>'
+        f'<span class="food__kcal-unit"> kcal</span>'
+        f'</p>'
+        f'<p class="food__macros">'
+        f'p {totals["protein_g"]}/{p_target}'
+        f' · c {totals["carbs_g"]}/{c_target}'
+        f' · f {totals["fat_g"]}/{f_target}'
+        f'</p>'
+    )
+
+
+def goal_card(goal: dict, history: list[tuple[str, str]], today_str: str,
+              state: dict | None = None, settings: dict | None = None) -> str:
     title = html.escape(goal.get("title", goal.get("id", "")))
     cat = category_of(goal)
 
@@ -159,9 +201,16 @@ def goal_card(goal: dict, history: list[tuple[str, str]], today_str: str) -> str
         else ''
     )
 
+    # Food gets a kcal/macros readout between title and foot. Everything
+    # else just has title → foot.
+    extras = ""
+    if goal.get("id") == FOOD_GOAL_ID and state is not None and settings is not None:
+        extras = food_body(state, settings)
+
     return f"""
         <article class="goal goal--cat-{cat} goal--{today_status}" data-cat="{cat}">
           <h3 class="goal__title">{title}</h3>
+          {extras}
           <div class="goal__foot">
             <div class="goal__strip" aria-label="{HISTORY_DAYS}-day history">{''.join(cells)}</div>
             {flame}
@@ -170,11 +219,14 @@ def goal_card(goal: dict, history: list[tuple[str, str]], today_str: str) -> str
 
 
 def section_block(window_key: str, label: str, range_label: str,
-                  goals: list[dict], recent_states: dict, today_str: str) -> str:
+                  goals: list[dict], recent_states: dict, today_str: str,
+                  state: dict, settings: dict) -> str:
     if not goals:
         return ""
     cards = "".join(
-        goal_card(g, history_for(g["id"], recent_states), today_str) for g in goals
+        goal_card(g, history_for(g["id"], recent_states), today_str,
+                  state=state, settings=settings)
+        for g in goals
     )
     range_html = (
         f'<span class="sec-range">{range_label}</span>' if range_label else ''
@@ -232,7 +284,8 @@ def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, di
         buckets.setdefault(g.get("window", "any"), []).append(g)
 
     section_html = "".join(
-        section_block(wkey, label, rng, buckets.get(wkey, []), recent_states, today_str)
+        section_block(wkey, label, rng, buckets.get(wkey, []), recent_states,
+                      today_str, state, settings)
         for wkey, label, rng in SECTIONS
     )
 
