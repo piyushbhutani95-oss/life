@@ -89,30 +89,30 @@ notifications_sent:
 food:
 - item: 50g cooked poha + 2 eggs
   meal: breakfast
-  kcal: 215
-  protein_g: 14
-  carbs_g: 14
-  fat_g: 12
+  kcal: 255
+  protein_g: 15
+  carbs_g: 15
+  fat_g: 15
 - item: small cup of tea (milk + sugar)
-  kcal: 60
+  kcal: 80
   protein_g: 2
-  carbs_g: 8
-  fat_g: 2
+  carbs_g: 10
+  fat_g: 3
 - item: protein shake (25g whey, water)
-  kcal: 110
+  kcal: 120
   protein_g: 25
-  carbs_g: 2
+  carbs_g: 3
   fat_g: 2
 - item: 75g cooked rice + 200g cooked daal
   meal: lunch
-  kcal: 298
-  protein_g: 14
-  carbs_g: 47
-  fat_g: 5
+  kcal: 340
+  protein_g: 16
+  carbs_g: 52
+  fat_g: 9
 - item: 200g cooked daal
   meal: snack
-  kcal: 200
-  protein_g: 12
-  carbs_g: 26
-  fat_g: 5
+  kcal: 240
+  protein_g: 14
+  carbs_g: 30
+  fat_g: 8
 scheduled_blocks: []
