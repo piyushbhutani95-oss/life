@@ -36,6 +36,9 @@ completions:
 - goal_id: guitar
   status: done
   at: '21:15'
+- goal_id: read
+  status: done
+  at: '22:17'
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
