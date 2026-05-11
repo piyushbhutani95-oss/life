@@ -142,4 +142,10 @@ food:
   protein_g: 7
   carbs_g: 10
   fat_g: 7
+- item: 130g boiled chicken + 30g cooked rice + stir-fried veggies
+  meal: dinner
+  kcal: 400
+  protein_g: 43
+  carbs_g: 21
+  fat_g: 15
 scheduled_blocks: []
