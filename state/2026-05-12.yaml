@@ -65,6 +65,10 @@ notifications_sent:
   nudge_time: '17:00'
   level: soft
   at: '17:00'
+- goal_id: course
+  nudge_time: '19:00'
+  level: soft
+  at: '19:00'
 food:
 - item: 2 slices multigrain bread (54g) + 3 eggs
   meal: breakfast
