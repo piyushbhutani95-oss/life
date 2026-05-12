@@ -41,4 +41,11 @@ notifications_sent:
   nudge_time: 09:00
   level: soft
   at: 09:00
+food:
+- item: 2 slices multigrain bread (54g) + 3 eggs
+  meal: breakfast
+  kcal: 365
+  protein_g: 32
+  carbs_g: 19
+  fat_g: 19
 scheduled_blocks: []
