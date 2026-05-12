@@ -12,6 +12,9 @@ completions:
 - goal_id: respond-to-people
   status: done
   at: '21:00'
+- goal_id: multivitamins
+  status: done
+  at: '09:00'
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
