@@ -51,4 +51,10 @@ food:
   protein_g: 32
   carbs_g: 19
   fat_g: 19
+- item: 50g cooked rice + 150g cooked white chhole
+  meal: lunch
+  kcal: 370
+  protein_g: 14
+  carbs_g: 45
+  fat_g: 14
 scheduled_blocks: []
