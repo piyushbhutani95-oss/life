@@ -476,30 +476,49 @@ html, body {
 
 /* ── responsive ───────────────────────────────────────────── */
 
-/* Desktop: lock the whole page to 100vh, no scroll. Content is sized
-   to fit a typical laptop (>=800px viewport height) with everything
-   visible in one glance. Tighter paddings, smaller section headers,
-   shorter card min-height. */
+/* Desktop: lock the whole page to 100vh, no scroll. Sizes adapt to
+   viewport height via clamp(min, vh, max) so content fills naturally on
+   tall monitors but stays compact on short laptops. */
 @media (min-width: 901px) {
   html, body { height: 100vh; overflow: hidden; }
   .paper {
     height: 100vh;
-    padding: 18px 28px 14px;
+    padding: clamp(18px, 2.4vh, 30px) clamp(24px, 2.4vw, 44px) clamp(14px, 1.8vh, 24px);
     display: flex;
     flex-direction: column;
     max-width: 1600px;
   }
-  .head { margin-bottom: 12px; padding-bottom: 12px; gap: 10px; }
-  .date { font-size: clamp(28px, 4vw, 44px); }
-  .progress { max-width: 460px; }
-  .main { flex: 1; gap: 14px; min-height: 0; }
+  .head {
+    margin-bottom: clamp(12px, 1.8vh, 22px);
+    padding-bottom: clamp(12px, 1.8vh, 20px);
+    gap: clamp(10px, 1.4vh, 16px);
+  }
+  .date { font-size: clamp(28px, 4.6vh, 56px); }
+  .progress { max-width: 480px; }
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(14px, 3vh, 36px);
+    min-height: 0;
+  }
   .section { display: flex; flex-direction: column; min-height: 0; }
-  .sec-head { margin-bottom: 8px; }
-  .sec-title { font-size: 24px; }
-  .cards { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
-  .goal { min-height: 76px; padding: 11px 12px 8px; gap: 8px; }
-  .goal__title { font-size: 17px; }
-  .foot { margin-top: 8px; padding-top: 10px; }
+  .sec-head { margin-bottom: clamp(8px, 1.2vh, 14px); }
+  .sec-title { font-size: clamp(22px, 2.9vh, 32px); }
+  .cards {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: clamp(8px, 1vh, 14px);
+  }
+  .goal {
+    min-height: clamp(78px, 11vh, 120px);
+    padding: clamp(11px, 1.4vh, 18px) clamp(12px, 1.2vw, 18px) clamp(8px, 1.1vh, 14px);
+    gap: clamp(8px, 1vh, 14px);
+  }
+  .goal__title { font-size: clamp(17px, 1.9vh, 22px); }
+  .foot {
+    margin-top: clamp(8px, 1.4vh, 18px);
+    padding-top: clamp(10px, 1.4vh, 18px);
+  }
   /* Disable motion-in animations on desktop lock — they shift layout */
   .head, .section, .foot { animation: none; }
 }
