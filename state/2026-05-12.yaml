@@ -106,4 +106,10 @@ food:
   protein_g: 7
   carbs_g: 10
   fat_g: 7
+- item: 50g cooked rice + 100g boiled chicken + 50g cooked chickpeas
+  meal: dinner
+  kcal: 350
+  protein_g: 37
+  carbs_g: 29
+  fat_g: 10
 scheduled_blocks: []
