@@ -279,6 +279,7 @@ html, body {
   flex-direction: column;
   gap: 10px;
   min-height: 92px;
+  cursor: pointer;
   box-shadow:
     0 1px 0 rgba(0,0,0,0.03),
     0 4px 12px -8px rgba(0,0,0,0.18);
@@ -290,6 +291,19 @@ html, body {
   box-shadow:
     0 1px 0 rgba(0,0,0,0.04),
     0 8px 18px -8px rgba(0,0,0,0.25);
+}
+/* Already-marked + food cards aren't clickable */
+.goal--done,
+.goal--partial,
+.goal--skipped,
+.goal[data-id="food"] { cursor: default; }
+.goal[data-id="food"]:hover { transform: none; }
+
+/* In-flight tap-to-mark request */
+.goal.is-marking { opacity: 0.6; pointer-events: none; }
+.goal.goal--mark-error {
+  outline: 2px solid var(--c-social);
+  outline-offset: 1px;
 }
 
 .goal::before {
@@ -462,6 +476,35 @@ html, body {
 
 /* ── responsive ───────────────────────────────────────────── */
 
+/* Desktop: lock the whole page to 100vh, no scroll. Content is sized
+   to fit a typical laptop (>=800px viewport height) with everything
+   visible in one glance. Tighter paddings, smaller section headers,
+   shorter card min-height. */
+@media (min-width: 901px) {
+  html, body { height: 100vh; overflow: hidden; }
+  .paper {
+    height: 100vh;
+    padding: 18px 28px 14px;
+    display: flex;
+    flex-direction: column;
+    max-width: 1600px;
+  }
+  .head { margin-bottom: 12px; padding-bottom: 12px; gap: 10px; }
+  .date { font-size: clamp(28px, 4vw, 44px); }
+  .progress { max-width: 460px; }
+  .main { flex: 1; gap: 14px; min-height: 0; }
+  .section { display: flex; flex-direction: column; min-height: 0; }
+  .sec-head { margin-bottom: 8px; }
+  .sec-title { font-size: 24px; }
+  .cards { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+  .goal { min-height: 76px; padding: 11px 12px 8px; gap: 8px; }
+  .goal__title { font-size: 17px; }
+  .foot { margin-top: 8px; padding-top: 10px; }
+  /* Disable motion-in animations on desktop lock — they shift layout */
+  .head, .section, .foot { animation: none; }
+}
+
+/* Tablet / narrow desktop: allow scroll, slightly tighter spacing */
 @media (max-width: 900px) {
   .paper { padding: 22px 18px 60px; }
   .time { margin-left: 0; }
@@ -469,6 +512,7 @@ html, body {
   .sec-title { font-size: 24px; }
 }
 
+/* Phone: 2-col grid, smaller everything */
 @media (max-width: 540px) {
   .cards { grid-template-columns: 1fr 1fr; gap: 8px; }
   .goal { min-height: 80px; padding: 12px 12px 8px; }

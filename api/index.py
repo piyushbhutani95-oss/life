@@ -349,16 +349,35 @@ def run_tick() -> dict:
 
 # ---------- HTTP handler ----------
 
+CORS_HEADERS = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "X-Secret, Content-Type, Authorization",
+    "Access-Control-Max-Age": "86400",
+}
+
+
 class handler(BaseHTTPRequestHandler):
+    def _send_cors(self) -> None:
+        for k, v in CORS_HEADERS.items():
+            self.send_header(k, v)
+
     def _respond(self, code: int, body) -> None:
         self.send_response(code)
         self.send_header("Content-Type",
                          "application/json" if isinstance(body, (dict, list)) else "text/plain; charset=utf-8")
+        self._send_cors()
         self.end_headers()
         if isinstance(body, (dict, list)):
             self.wfile.write(json.dumps(body).encode())
         else:
             self.wfile.write(str(body).encode())
+
+    def do_OPTIONS(self) -> None:
+        # CORS preflight from the dashboard's tap-to-mark JS
+        self.send_response(204)
+        self._send_cors()
+        self.end_headers()
 
     def _params(self) -> dict:
         return {k: v[0] for k, v in parse_qs(urlparse(self.path).query).items()}

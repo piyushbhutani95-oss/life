@@ -22,6 +22,8 @@ Run any time the underlying data changes.
 from __future__ import annotations
 
 import html
+import json
+import os
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -239,8 +241,9 @@ def goal_card(goal: dict, history: list[tuple[str, str]], today_str: str,
     if goal.get("id") == FOOD_GOAL_ID and state is not None and settings is not None:
         extras = food_body(state, settings)
 
+    gid = html.escape(goal.get("id", ""))
     return f"""
-        <article class="goal goal--cat-{cat} goal--{today_status}" data-cat="{cat}">
+        <article class="goal goal--cat-{cat} goal--{today_status}" data-cat="{cat}" data-id="{gid}">
           <h3 class="goal__title">{title}</h3>
           {extras}
           <div class="goal__foot">
@@ -335,6 +338,16 @@ def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, di
     title_date = now.strftime("%A, %B %-d")
     time_label = now.strftime("%H:%M")
 
+    # Tap-to-mark needs the webhook URL + shared secret. Prefer env vars
+    # (CI sets these from GitHub Actions secrets); fall back to settings.yaml
+    # for local renders. If neither is present, the click handler degrades
+    # gracefully (cards stay clickable-but-do-nothing).
+    webhook_cfg = settings.get("webhook", {}) or {}
+    webhook_url = os.environ.get("WEBHOOK_URL") or webhook_cfg.get("url", "")
+    webhook_secret = os.environ.get("SHARED_SECRET") or webhook_cfg.get("shared_secret", "")
+    webhook_url_js = json.dumps(webhook_url)
+    webhook_secret_js = json.dumps(webhook_secret)
+
     last_notif = (
         f"last nudge · {html.escape(notifications[-1].get('level', '?'))} "
         f"@ {html.escape(notifications[-1].get('at', '?'))}"
@@ -344,7 +357,9 @@ def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, di
 
     pills = filter_pills(active)
 
-    # tiny inline script: theme + filter persistence + filter behavior
+    # tiny inline script: theme + filter persistence + filter behavior +
+    # tap-to-mark-done. The webhook URL + secret are injected as window
+    # globals by the <head> snippet just above.
     script = """
 (function(){
   var body = document.body;
@@ -357,7 +372,8 @@ def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, di
   try { savedTheme = localStorage.getItem('life.theme') || 'light'; } catch(e){}
   setTheme(savedTheme);
   document.querySelectorAll('[data-action=theme]').forEach(function(b){
-    b.addEventListener('click', function(){
+    b.addEventListener('click', function(e){
+      e.stopPropagation();
       setTheme(body.dataset.theme === 'light' ? 'dark' : 'light');
     });
   });
@@ -379,7 +395,45 @@ def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, di
   try { savedFilter = localStorage.getItem('life.filter') || 'all'; } catch(e){}
   setFilter(savedFilter);
   document.querySelectorAll('.pill').forEach(function(p){
-    p.addEventListener('click', function(){ setFilter(p.dataset.filter); });
+    p.addEventListener('click', function(e){
+      e.stopPropagation();
+      setFilter(p.dataset.filter);
+    });
+  });
+
+  // ── tap-to-mark-done ──────────────────────────────────────
+  var webhook = window.LIFE_WEBHOOK_URL || '';
+  var secret  = window.LIFE_SECRET || '';
+  function markDone(card){
+    var goalId = card.dataset.id;
+    if (!goalId || goalId === 'food') return;             // food never marked via tap
+    if (card.classList.contains('goal--done')) return;    // already done
+    if (card.classList.contains('goal--partial')) return; // already partial
+    if (card.classList.contains('is-marking')) return;    // in flight
+    if (!webhook || !secret){
+      console.warn('webhook not configured — cannot mark', goalId);
+      return;
+    }
+    card.classList.add('is-marking');
+    fetch(webhook + '?goal=' + encodeURIComponent(goalId) + '&status=done', {
+      method: 'GET',
+      headers: { 'X-Secret': secret }
+    }).then(function(r){
+      if (!r.ok){ return r.text().then(function(t){ throw new Error(r.status + ' ' + t); }); }
+      // optimistic UI: flip class so dashboard reflects immediately
+      card.classList.remove('goal--open');
+      card.classList.add('goal--done');
+    }).catch(function(err){
+      console.error('mark failed', goalId, err);
+      card.classList.add('goal--mark-error');
+      setTimeout(function(){ card.classList.remove('goal--mark-error'); }, 2000);
+    }).finally(function(){
+      card.classList.remove('is-marking');
+    });
+  }
+  document.querySelectorAll('.goal[data-id]').forEach(function(card){
+    if (card.dataset.id === 'food') return;  // food card not tap-marked
+    card.addEventListener('click', function(){ markDone(card); });
   });
 })();
 """
@@ -394,6 +448,7 @@ def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, di
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
+<script>window.LIFE_WEBHOOK_URL = {webhook_url_js}; window.LIFE_SECRET = {webhook_secret_js};</script>
 </head>
 <body data-theme="light" data-filter="all">
   <div class="paper">

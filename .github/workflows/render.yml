@@ -36,6 +36,12 @@ jobs:
           fi
 
       - name: Render index.html
+        env:
+          # Injected into index.html so the in-page tap-to-mark JS can
+          # call the webhook with the right URL + shared secret. These
+          # mirror the values used by the Vercel function itself.
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          SHARED_SECRET: ${{ secrets.SHARED_SECRET }}
         run: python3 render.py
 
       - name: Prepare site directory
