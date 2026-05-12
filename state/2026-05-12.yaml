@@ -14,7 +14,7 @@ completions:
   at: '21:00'
 - goal_id: multivitamins
   status: done
-  at: '09:00'
+  at: 09:00
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
@@ -44,6 +44,14 @@ notifications_sent:
   nudge_time: 09:00
   level: soft
   at: 09:00
+- goal_id: workout
+  nudge_time: '13:00'
+  level: soft
+  at: '13:00'
+- goal_id: food
+  nudge_time: '13:00'
+  level: soft
+  at: '13:00'
 food:
 - item: 2 slices multigrain bread (54g) + 3 eggs
   meal: breakfast
