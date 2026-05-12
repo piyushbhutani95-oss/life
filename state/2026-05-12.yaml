@@ -24,6 +24,9 @@ completions:
 - goal_id: workout
   status: done
   at: '17:48'
+- goal_id: guitar
+  status: done
+  at: '20:06'
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
