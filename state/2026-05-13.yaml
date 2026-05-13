@@ -30,6 +30,9 @@ completions:
 - goal_id: respond-to-people
   status: done
   at: '11:19'
+- goal_id: workout
+  status: done
+  at: '13:11'
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
