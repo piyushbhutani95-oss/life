@@ -46,4 +46,16 @@ notifications_sent:
   nudge_time: 08:00
   level: soft
   at: 08:00
+food:
+- item: Supply6 chocolate protein wafer bar (40g)
+  meal: breakfast
+  kcal: 185
+  protein_g: 10
+  carbs_g: 17
+  fat_g: 12
+- item: small cup of tea (milk, very little sugar)
+  kcal: 60
+  protein_g: 2
+  carbs_g: 6
+  fat_g: 3
 scheduled_blocks: []
