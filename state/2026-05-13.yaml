@@ -18,6 +18,9 @@ completions:
 - goal_id: journal
   status: done
   at: 08:31
+- goal_id: bath
+  status: done
+  at: 08:31
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
