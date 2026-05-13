@@ -65,9 +65,9 @@ food:
   protein_g: 2
   carbs_g: 6
   fat_g: 3
-- item: 140g overnight oats with whey, flax, chia, dash of honey
-  kcal: 400
-  protein_g: 30
-  carbs_g: 45
-  fat_g: 13
+- item: 140g overnight oats with milk, half-scoop whey, flax, chia, dash of honey
+  kcal: 310
+  protein_g: 22
+  carbs_g: 34
+  fat_g: 11
 scheduled_blocks: []
