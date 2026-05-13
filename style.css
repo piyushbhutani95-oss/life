@@ -455,6 +455,95 @@ html, body {
   text-transform: lowercase;
 }
 
+/* ── analytics card ───────────────────────────────────────── */
+/* Reuses .goal shape; replaces today-status logic with aggregate stats.
+   .ana on the card lifts cursor + hover bumps since analytics cards
+   aren't clickable. */
+
+.goal.ana { cursor: default; }
+.goal.ana:hover { transform: none; }
+
+.ana__count {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(20px, 2.4vh, 30px);
+  line-height: 1;
+  color: var(--ink);
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.ana__num { color: var(--ink); }
+.ana__sep,
+.ana__dim { color: var(--ink-soft); font-weight: 400; }
+.ana__pct {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-left: auto;
+}
+.ana__unit {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-left: 3px;
+}
+.ana__streak {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.10em;
+  color: var(--ink-soft);
+  text-transform: lowercase;
+}
+.ana__streak .ana__num {
+  color: var(--ink);
+  font-weight: 600;
+}
+.ana__empty {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  text-transform: lowercase;
+}
+
+/* On the analytics page, the cell strip can be longer than 7 days — make
+   sure cells stay readable as the strip compresses. */
+body[data-page="analytics"] .cells,
+body[data-page="analytics"] .goal__strip {
+  min-width: 0;
+}
+body[data-page="analytics"] .cell {
+  min-width: 4px;
+}
+
+.foot__link {
+  color: var(--ink-soft);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--rule);
+  padding-bottom: 1px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.foot__link:hover {
+  color: var(--ink);
+  border-color: var(--ink-soft);
+}
+
 /* ── motion ───────────────────────────────────────────────── */
 
 @keyframes ink-in {

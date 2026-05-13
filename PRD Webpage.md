@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Author** | Piyush |
-| **Status** | v0.3 — webhook live, pre-cron |
-| **Last updated** | 2026-05-10 |
+| **Status** | v0.5 — food card, tap-to-mark, analytics |
+| **Last updated** | 2026-05-13 |
 | **Repo** | `/Users/piyushbhutani/Documents/2026 /Code/Life` (GitHub: `piyushbhutani95-oss/life`) |
 
 ---
@@ -15,9 +15,9 @@ A personal webpage that helps me actually do what I say I'll do each day.
 
 I tell it my daily goals. It shows me, at any moment, what's done and what's left, and how I've been doing across the past week. As the day wears on and I haven't done things, it nudges me — gently first, then louder. Worst case, it flips my phone into a no-distractions mode so I stop scrolling and get back to work.
 
-**This is not an app.** No login, no UI to click through, no buttons to design. It's a webpage I look at, and I talk to Claude (in the terminal *or on my phone via Claude Code on the web*) to update it. Claude is my keyboard.
+**This is not an app.** No login, no UI to click through, no buttons to design. It's a webpage I look at, and I talk to Claude (in the terminal *or on my phone via Claude Code on the web*) to update it. Claude is my keyboard. *(Update: there's now also a one-tap mark mechanism on the dashboard itself for the common "I did this" case — see §5.)*
 
-Scope for now: **daily goals only.** Long-term goals, workouts as a separate module, and anything that auto-detects whether I did something — all later. I never want auto-detection of completion; the system can *ask* me whether something is done, but it shouldn't guess.
+Scope for now: **daily goals + a single food/calorie card**. Long-term goals, workouts as a separate module, and anything that auto-detects whether I did something — all later. I never want auto-detection of completion; the system can *ask* me whether something is done, but it shouldn't guess.
 
 ---
 
@@ -36,128 +36,150 @@ Existing tools each do one piece. None chain them together. A custom thing is ju
 ## 3. The loop
 
 1. I tell Claude my daily goals once. They get saved to `goals.yaml`.
-2. Through the day, I tell Claude *"done"*, *"skipped"*, *"what's left?"* — from the terminal on my Mac, or from `claude.ai/code` on my phone browser. Claude appends to today's state file. The webpage reflects it on next refresh.
-3. *(planned — `tick.py` exists, cron wiring pending)* Every 15 minutes a tiny background watcher (GitHub Actions cron) looks at the current time and what I haven't done yet.
-4. *(in progress)* If I'm fine, it does nothing. If I'm a bit behind → soft phone notification *with ✓ Done / ✗ Not yet buttons*. Meaningfully behind → louder notification + the unfinished goal gets dropped onto Google Calendar in the next free slot. Seriously behind → loud notification + my phone flips into a "no distractions" mode.
-5. ✅ Tapping ✓ on a notification hits the **live Vercel webhook** that marks the goal done in today's state file — no need to open Claude. (Wiring tick.py → ntfy → buttons → webhook is the next milestone.)
+2. Through the day, I tell Claude *"done"*, *"skipped"*, *"what's left?"* — from the terminal on my Mac, from `claude.ai/code` on my phone browser, or by tapping a card on the dashboard itself. Claude (or the dashboard's JS) writes to today's state file.
+3. ✅ Every 15 minutes a tiny background watcher (cron-job.org → Vercel `/api/tick`) looks at the current time and what I haven't done yet.
+4. ✅ If I'm fine, it does nothing. If goals are overdue, it sends an ntfy push with Yes/No buttons.
+5. *(planned)* Meaningfully behind → louder notification + the unfinished goal gets dropped onto Google Calendar in the next free slot. Seriously behind → loud notification + my phone flips into a "no distractions" mode.
+6. ✅ Tapping ✓ on a notification — or tapping the card on the dashboard — hits the Vercel webhook that marks the goal done in today's state file.
 
 ---
 
 ## 4. The webpage — built
 
-Open `index.html` in a browser, or visit the live URL `https://piyushbhutani95-oss.github.io/life/` (auto-deployed by GitHub Pages on every commit). **Paper-planner** aesthetic — flowing layout, scrolls naturally if content overflows, no fixed-viewport lock. Two themes (light / dark), switchable from a button in the header; choice persists in `localStorage`.
+Open `index.html` in a browser, or visit the live URL `https://piyushbhutani95-oss.github.io/life/` (auto-deployed by GitHub Pages on every commit). **Paper-planner** aesthetic. Two themes (light / dark), switchable from a button in the header; choice persists in `localStorage`.
+
+**Desktop is locked to 100vh — no scroll.** Card and gap sizes adapt to viewport height via `clamp(min, vh, max)` so the layout fills tall monitors and stays compact on short laptops. On phones, layout reflows to a 2-column scrollable grid.
 
 **Header**
-- Date as one quiet italic line: `10 May 2026 | Sunday` (Newsreader italic, ~22–32px — small on purpose, not the focal point).
+- Date as one quiet italic line: `13 May 2026 | Tuesday` (Newsreader italic).
 - Local time on the right (mono).
-- A small `light` ↔ `dark` toggle button at the far right (mono, capsule shape).
-- Below the headline: a 6px progress pill (filled in the theme accent) + an italic percentage + a mono `00 / 15` count.
-- Below that: **filter pills** — `all 15 · health 5 · mind 4 · skills 4 · social 2`. Each pill has a colored dot in the category accent. Tap one and only that category's goals stay visible; sections that end up empty collapse. Active pill becomes ink-on-paper. Choice persists in `localStorage`.
+- A small `light` ↔ `dark` toggle button at the far right.
+- A 6px progress pill (filled in the theme accent) + an italic percentage + a mono `00 / 16` count.
+- **Filter pills** — `all 16 · health 5 · mind 4 · skills 4 · social 2`. Each pill has a colored dot in the category accent. Choice persists in `localStorage`.
 
 **Sections — by time-of-day**
 - `morning` (`06 — 12`), `afternoon` (`12 — 18`), `evening` (`18 — 23`), `anytime` (no range).
-- Each section header is an italic title + mono hour-range eyebrow + a hairline rule filling the gap + a mono count (e.g. `06`).
 - Sections with no goals don't render.
 
 **Goal cards**
-- Auto-fill grid (`minmax(170px, 1fr)`, 10px gap). Reflows by viewport width — 6-up on a wide monitor, 2-up on phones.
-- Each card has:
-  - A 3px **category color stripe** across the top (mint / lilac / butter / rose).
-  - Italic title in Newsreader (~20px).
-  - A **7-day streak strip** along the bottom — small dashed bars; days marked done fill in the goal's category color, partial = half-fill, skipped = solid rule, no-entry = soft rule. Today's bar gets an outline + extra height so it's always visible.
-  - A **flame badge** (`✦ 09`) only when the current streak ≥ 3.
-- Today's status quietly affects the whole card — done = 50% opacity + strikethrough on title; partial = 78% opacity; skipped = muted title + 50% opacity; open = default. No checkmarks, no toggle buttons. Marking goes through Claude or the live ntfy ✓/✗ buttons — the dashboard is read-only.
+- Auto-fill grid (`minmax(180px, 1fr)`). Reflows by viewport width.
+- Each card: category color stripe across the top, italic title, 7-day streak strip across the bottom, flame badge (`✦ 09`) only when streak ≥ 3.
+- Today's status quietly affects the whole card — done = 50% opacity + strikethrough; partial = 78%; skipped = muted; open = default.
+- **Tap-to-mark**: clicking an open card POSTs `done` to the webhook via in-page JS and optimistically flips the card to done immediately. The Food card is exempt (see §4c).
 
-**Footer:** one thin mono line — `2026-05-10 · no nudges sent today · v1`.
-
-**Design language**
-
-- **Typography:** Newsreader (italic 400, the display + card titles) paired with JetBrains Mono (labels, eyebrows, counts, timestamps).
-- **Background:** every theme has a real 28×28px ruled grid drawn from CSS variables (`--rule-soft`), so the page always feels like paper.
-- **Light theme:** paper `#fafaf6` · cards `#ededdf` · ink `#171712` · accent `#2d2d28` (graphite progress fill, ink-on-paper active filter).
-- **Dark theme:** paper `#1a1d22` · cards `#252932` · ink `#ece9e0` · accent `#d9b366` (warm gold).
-- **Category accents — locked across both themes:** mint `#9ec1a8` (health) · lilac `#b6a8d1` (mind) · butter `#d9c07a` (skills) · rose `#d9a0a0` (social). All other tones are derived via `color-mix(in oklab, …)` so the whole UI re-tones from one var swap.
-- **Motion:** sections and the header fade in once on load; cards lift 1px on hover. Nothing else.
-
-This is a redesign of the earlier "drafting / engineering ledger" look. Implementation reference: `design_handoff_life_tracker/` (V1 — Editorial).
+**Footer:** one thin mono line — `2026-05-13 · last nudge · soft @ 13:00 · v1` with a small `analytics` link to the analytics page (§4d).
 
 ---
 
 ## 4a. History — what's stored vs what's shown
 
-**Storage (the source of truth):** every day gets its own file under `state/YYYY-MM-DD.yaml` and is **kept forever** — git is the database, every change is a commit, nothing is ever truncated or rolled up. Long-term analysis ("how often did I meditate in May?") will read straight from this folder.
+**Storage (the source of truth):** every day gets its own file under `state/YYYY-MM-DD.yaml` and is kept forever — git is the database. Long-term analysis reads straight from this folder.
 
-**Display (the dashboard):** each card's strip shows only the **last 7 days** (`HISTORY_DAYS = 7` in `render.py`). The page itself is no longer locked to 100vh — it flows and scrolls if needed, but with 15 cards across 3–4 sections it usually fits a laptop screen on first paint.
+**Display (dashboard):** each card's strip shows only the last 7 days. The analytics page (§4d) reads all history.
 
-This split means I can change the dashboard window any time (e.g. show the last 30 days during a review week) without losing data, and any future analytics module gets the full history for free.
+---
+
+## 4b. Categories + accents
+
+Locked across both themes:
+- mint (`#9ec1a8`) — **health**
+- lilac (`#b6a8d1`) — **mind**
+- butter (`#d9c07a`) — **skills**
+- rose (`#d9a0a0`) — **social**
+
+All other tones derived via `color-mix(in oklab, …)` so the whole UI re-tones from one var swap.
+
+---
+
+## 4c. Food card
+
+The 16th goal (`food` in `goals.yaml`) gets a richer card variant. It sits in the **Anytime** section between Step out and Respond to people, with the health (mint) accent.
+
+**What's different from a regular goal card**:
+- A two-line readout sits between the title and the 7-day strip: `0/2200 KCAL` over `p 0 · c 0 · f 0` (both small mono so the card stays the standard height).
+- Status is derived from the `food` list on the state YAML (not from completions). Card stays "open" all day; auto-strikes after `end_hour` (23:00 IST) if any entries were logged.
+- Tap-to-mark is disabled on this card — food isn't a yes/no question.
+
+**Logging meals**: ntfy fires meal-time pushes at 09:00 / 13:00 / 20:00. The user usually ignores the Yes/No buttons and instead opens `claude.ai/code` to type free text (*"100g dal and rice"*). Claude estimates kcal + protein/carbs/fat and appends an entry to `state/<today>.yaml` under `food`:
+
+```yaml
+food:
+  - at: "13:15"
+    item: "100g dal + 1 cup rice"
+    kcal: 320
+    protein_g: 11
+    carbs_g: 60
+    fat_g: 2
+    meal: lunch
+```
+
+Targets live in `settings.yaml` → `nutrition` block (default 2200 kcal / 130p / 250c / 70f).
+
+---
+
+## 4d. Analytics page
+
+A separate `analytics.html` at `/analytics.html` on GitHub Pages. Reads **all** `state/*.yaml` files (full history, not just 7 days) and shows per-goal aggregate stats:
+
+- Total `X / Y` days done and percentage.
+- Current streak + longest streak.
+- A history strip covering every day in `state/` (auto-sizes — gets compressed as you accumulate weeks).
+- **Food** has its own card showing days-logged, average daily kcal + macros, best/worst days.
+
+Same paper-planner aesthetic as the main dashboard. Footer carries a `← dashboard` link.
+
+Generated by the same `render.py` script as `index.html` — both rebuild on every commit via the render workflow.
 
 ---
 
 ## 5. How I talk to it
 
-Two surfaces, same Claude:
+Three surfaces, same data:
 
-**On my Mac** — open Claude Code in the project folder and say things in plain English.
-**On my phone** — open `claude.ai/code` in the browser, connect to the GitHub repo `piyushbhutani95-oss/life`, and say the same things. Claude commits to the repo; the GitHub Action re-renders `index.html` and publishes it to Pages within ~30s.
+**Mac terminal** — open Claude Code in the project folder, say things in plain English.
+**Phone (`claude.ai/code`)** — connect to the GitHub repo, type plain English. Always say "commit directly to main" to avoid stranded branches.
+**Dashboard tap-to-mark** — open the dashboard on any device, click any open card to mark it done. Webhook handles it.
 
-Examples either place:
-
+Examples (Mac or phone):
 - *"Add a goal: meditate 15 minutes, prefer mornings"*
 - *"Mark workout done"*
 - *"Skip reading today"*
-- *"Mark multivitamins and skin care done"*
+- *"Logged 2 eggs and toast — commit to main"*  (food)
 - *"What's left for today?"*
-- *"Pause guitar for now"* (sets `active: false`)
-- *"Move code to the afternoon window"*
+- *"Pause guitar for now"*
 - *"Recategorize step-out as health"*
-- *"Schedule the rest into my calendar"* (planned)
-- *"Tone down the nagging today, I'm sick"* (planned)
 
-Claude edits the underlying YAML files; `render.py` regenerates the page. No forms, no UI to build.
-
-For day-to-day marking I shouldn't even need to open Claude — see §6 (notifications carry ✓ / ✗ buttons that mark goals directly via the live webhook).
+Claude edits the underlying YAML; `render.py` regenerates the dashboard + analytics; render workflow deploys to Pages within ~30s.
 
 ---
 
-## 6. Push notifications — built (cron pending)
+## 6. Push notifications — built
 
 Three pieces work together:
 
-**A. The mailbox (ntfy.sh)** ✅ — A free service. Topic is a long random string in `settings.yaml` (gitignored). Phone subscribed via the free **ntfy** Android app. Test pushes confirmed delivery on 2026-05-10.
+**A. The mailbox (ntfy.sh)** ✅ — Private topic in gitignored `settings.yaml`. Subscribed via the ntfy Android app.
 
-**B. The robot (`tick.py` → GitHub Actions cron)** ⌛ — Phase 1 of `tick.py` is built: reads `goals.yaml` + today's state + the clock, computes which goals are nudge-eligible (per `nudge_at`, dedup, quiet hours), buckets them into a payload, and **prints** what it would send. Phase 2 (next) swaps the print for a real ntfy POST. Phase 3 is the GitHub Actions cron file (`.github/workflows/tick.yml`) that runs `tick.py` every 15 min and commits dedup state back to the repo.
+**B. The watcher (`/api/tick` + external cron)** ✅ — cron-job.org pings the Vercel endpoint every 15 minutes. GitHub Actions runs the same ping on a backup schedule. The endpoint reads `goals.yaml` + today's state + the clock, sends one ntfy push per eligible goal, and writes dedup state back to the repo.
 
-**C. Action buttons → live Vercel webhook** ✅ — `https://life-sepia-psi.vercel.app/api/mark` is deployed. ntfy supports per-notification action buttons; each nudge will look like:
+**C. Action buttons** ✅ — Each push carries Yes / No buttons that POST to `/api/mark` with the shared-secret header. Tap Yes → goal marked done; render rebuilds; dashboard refreshes. For the Food card, the user ignores the buttons and instead opens Claude to log free text.
 
-> **Workout** (45m)
-> Did you do this yet?
-> [ Yes ] [ No ]
-
-Tapping **Yes** hits the webhook (with the shared-secret header), which validates auth and calls the GitHub Contents API to append `{goal_id, status: done, at: HH:MM}` to today's `state/YYYY-MM-DD.yaml`. The render workflow then re-renders the dashboard. Tapping **No** dismisses the notification; the next tick may re-prompt later if the goal is still open.
-
-End-to-end was verified on 2026-05-10 by curling the webhook with a test goal and seeing the commit + dashboard update appear within seconds.
-
-Net effect: 95% of daily marking happens with one tap, no Claude conversation. Claude is only needed for richer edits (new goals, pausing, weekly review, etc.).
-
-I don't run anything. The robot is hosted free (GitHub Actions). The mailbox is free (ntfy.sh). The webhook is free (Vercel hobby tier). The phone app is free.
+End-to-end verified 2026-05-10 via curl + real meal logs.
 
 ---
 
-## 7. Escalation ladder — planned
+## 7. Escalation ladder — partially built
 
-The watcher decides nudge level by **how overdue I am, weighted by priority** — not by auto-detection. The system never assumes I did or didn't do something; it only knows what I've explicitly marked (in Claude or via Yes/No buttons).
+Each goal has an explicit `nudge_at` (single `"HH:MM"` or list for multi check-ins). Priority no longer drives nudge timing; it's per-goal.
 
-| Level | When | What happens |
-|---|---|---|
-| **Calm** | All goals done, or plenty of day left | Nothing |
-| **Soft** | A few things left, more than a third of the day remaining | One gentle phone notification *with Yes/No buttons* asking "did you do X?" |
-| **Firm** | An important goal undone and more than half the day is gone | Louder notification *with Yes/No* + the goal gets dropped onto my Google Calendar in the next open slot |
-| **Hard** | Multiple important goals undone and only a quarter of the day left | Loud notification *with Yes/No* + my phone flips into a no-distractions mode |
-| **Lockdown** *(future, not in v1)* | Day is almost over, criticals undone | Phone screen-locks for a cool-down period |
+| Level | When | What happens | Status |
+|---|---|---|---|
+| **Calm** | All goals done, or plenty of day left | Nothing | ✅ built |
+| **Soft** | A few open, more than a third of the day left | Gentle ntfy push with Yes/No | ✅ built |
+| **Firm** | Important goal undone, more than half the day gone | Louder push + Calendar block | ⌛ Calendar part planned |
+| **Hard** | Multiple important goals undone, only a quarter left | Loud push + phone Focus mode | ⌛ Tasker part planned |
+| **Lockdown** | Day almost over, criticals undone | Phone screen-locks | 🔮 v3 |
 
-Thresholds live in `settings.yaml` under `escalation:` (currently `soft_after: 0.30 · firm_after: 0.50 · hard_after: 0.75` of waking-day fraction).
-
-**Per-goal nudge eligibility** is encoded directly on each goal via `nudge_at` (single `"HH:MM"` or list for multi check-ins). Priority no longer drives nudge timing — every active goal carries an explicit time.
+Thresholds in `settings.yaml` → `escalation`.
 
 ---
 
@@ -166,21 +188,15 @@ Thresholds live in `settings.yaml` under `escalation:` (currently `soft_after: 0
 When the watcher decides a goal needs a calendar block, it:
 - looks at my main Google Calendar to find the next genuinely free slot
 - creates an event there with prefix `🎯 Life:` and a distinct color
-- tags the event description with a hidden marker (`auto-scheduled-by:life-os`) so we can later find/clean up only events we created — never touching anything I made
+- tags the event description with a hidden marker (`auto-scheduled-by:life-os`) so we can later find/clean up only events we created
 
-If I mark the goal done before the event time (via Claude or Yes button), the event gets cancelled automatically.
+If I mark the goal done before the event time, the event gets cancelled automatically.
 
 ---
 
 ## 9. Phone "no-distractions mode" — planned
 
-One-time Android setup with Tasker (~$3.50) and the free ntfy app:
-
-- Tasker listens to my mailbox.
-- When a "Hard" level message arrives, Tasker turns on Do Not Disturb and launches a Focus mode that hides social apps, games, etc.
-- When all goals are eventually marked done (or end of day), Tasker turns it back off.
-
-Step-by-step instructions will live in `docs/phone-setup.md`.
+One-time Android setup with Tasker (~$3.50) and the free ntfy app. When a "Hard" level message arrives, Tasker turns on Do Not Disturb and launches a Focus mode. Step-by-step instructions will live in `docs/phone-setup.md`.
 
 ---
 
@@ -189,28 +205,28 @@ Step-by-step instructions will live in `docs/phone-setup.md`.
 ```
 /Users/piyushbhutani/Documents/2026 /Code/Life/
 ├── PRD Webpage.md                         ← this document
+├── CLAUDE.md                              ⌛ planned (working notes for Claude)
 ├── README.md                              ✓ built
 ├── .gitignore                             ✓ built
 ├── .vercelignore                          ✓ built (scopes Vercel deploy to api/)
-├── settings.example.yaml                  ✓ built (committed)
+├── settings.example.yaml                  ✓ built (committed) — incl. nutrition block
 ├── settings.yaml                          ✓ built (gitignored — holds secrets)
-├── goals.yaml                             ✓ built — 15 goals with category + nudge_at
+├── goals.yaml                             ✓ built — 16 goals (15 normal + Food)
 ├── state/
-│   ├── 2026-05-10.yaml                    ✓ today
-│   ├── 2026-05-06.yaml                    ✓ earlier
-│   └── …                                  ⌛ accumulates forever, one file per day
-├── render.py                              ✓ built — YAML → HTML (window = 7d)
-├── tick.py                                ✓ built (phase 1: print only)
+│   ├── 2026-05-13.yaml                    ✓ today
+│   └── …                                  ⌛ accumulates forever
+├── render.py                              ✓ built — YAML → index.html + analytics.html
+├── tick.py                                ✓ built (local fallback; cron uses api/)
 ├── style.css                              ✓ built — paper-planner tokens
-├── index.html                             ✓ generated
-├── design_handoff_life_tracker/           ✓ design reference (V1 — Editorial)
+├── index.html                             ✓ generated (dashboard)
+├── analytics.html                         ✓ generated (analytics page)
 ├── api/
-│   └── index.py                           ✓ deployed to Vercel — webhook for Yes/No buttons
+│   └── index.py                           ✓ deployed — /api/mark + /api/tick + CORS
 ├── requirements.txt                       ✓ Vercel function deps (PyYAML)
 ├── vercel.json                            ✓ rewrites /api/mark → /api/index
 ├── .github/workflows/
-│   ├── render.yml                         ✓ built — re-render + deploy Pages on every push
-│   └── tick.yml                           ⌛ planned — 15-min watcher cron
+│   ├── render.yml                         ✓ re-render both HTML files + deploy
+│   └── tick.yml                           ✓ fallback ping for the cron
 ├── schedule.py                            ⌛ planned — Google Calendar writes
 └── docs/
     └── phone-setup.md                     ⌛ planned — Tasker setup
@@ -220,69 +236,66 @@ The git repo *is* the database. Every change is versioned. Nothing in `state/` i
 
 ---
 
-## 11. The 15 daily goals (current)
+## 11. Current goals (16)
 
-Loaded in `goals.yaml`. Each goal carries a `category` (drives the dashboard color stripe + filter pill), a `window` (drives section grouping), and an explicit `nudge_at` (drives the watcher).
+Loaded in `goals.yaml`. Each goal has a `category`, `window`, and explicit `nudge_at`.
 
-| Goal | Category | Window | Nudge at | Time |
-|---|---|---|---|---|
-| Wake up early | health | morning | 06:00 | — |
-| Meditate | mind | morning | 06:00 | 15m |
-| Journal | mind | morning | 06:15 | 15m |
-| Bath | health | morning | 06:45 | 10m |
-| Skin care | health | morning | 06:45 | 5m |
-| Multivitamins | health | morning | 08:00 | 1m |
-| Workout | health | any | 13:00 | 45m |
-| Step out | social | afternoon | 18:00 | 15m |
-| Write | mind | morning | 17:00 | 1h |
-| Code | skills | any | 18:30 | 1h 30m |
-| Course | skills | evening | 19:00 | 30m |
-| Practice guitar | skills | any | 20:00 | 30m |
-| Language | skills | any | 20:30 | 20m |
-| Read | mind | evening | 21:30 | 30m |
-| Respond to people | social | any | 10:00 / 15:00 / 21:00 | — |
-
-**Distribution:** health 5 · mind 4 · skills 4 · social 2 · morning 6 · afternoon 1 · evening 5 · anytime 3.
-
-Edit by talking to Claude.
+| Goal | Category | Window | Nudge at |
+|---|---|---|---|
+| Wake up early | health | morning | 06:00 |
+| Meditate | mind | morning | 06:00 |
+| Journal | mind | morning | 06:15 |
+| Bath | health | morning | 06:45 |
+| Skin care | health | morning | 06:45 |
+| Multivitamins | health | morning | 08:00 |
+| Workout | health | any | 13:00 |
+| Step out | social | any | 18:00 |
+| Food | health | any | 09:00 / 13:00 / 20:00 (multi) |
+| Write | mind | evening | 17:00 |
+| Code | skills | evening | 18:30 |
+| Course | skills | evening | 19:00 |
+| Practice guitar | skills | evening | 20:00 |
+| Language | skills | evening | 20:30 |
+| Read | mind | afternoon | 21:30 |
+| Respond to people | social | any | 10:00 / 15:00 / 21:00 (multi) |
 
 ---
 
-## 12. Setup — what I have to do once
+## 12. Setup — what I had to do once
 
-1. ✅ Push the local repo to GitHub (`piyushbhutani95-oss/life`, public).
-2. ✅ Generate a long random ntfy topic, store in `settings.yaml` (gitignored).
-3. ✅ Install **ntfy** Android app, subscribe to the topic — verified with test pushes.
-4. ⌛ Connect Google Calendar — *(deferred until `schedule.py` is built)*
-5. ✅ Deploy `api/index.py` to Vercel; webhook live at `https://life-sepia-psi.vercel.app/api/mark`. Env vars set: `GITHUB_TOKEN`, `SHARED_SECRET`, `REPO`, `USER_TZ`, `ROLLOVER_HOUR`. Vercel deployment protection disabled (the function authenticates itself via shared secret).
-6. ⌛ Install **Tasker** on Android, follow `docs/phone-setup.md` — *(deferred until "Hard" level escalation needs it)*
+1. ✅ Push the local repo to GitHub.
+2. ✅ Generate a long random ntfy topic, store in `settings.yaml`.
+3. ✅ Install **ntfy** Android app, subscribe to topic.
+4. ⌛ Connect Google Calendar — deferred until `schedule.py` is built.
+5. ✅ Deploy `api/index.py` to Vercel. Env vars: GITHUB_TOKEN, SHARED_SECRET, REPO, USER_TZ, ROLLOVER_HOUR, NTFY_TOPIC, WEBHOOK_URL.
+6. ✅ Set up cron-job.org to ping `/api/tick` every 15 min.
+7. ⌛ Install **Tasker** on Android — deferred until "Hard" escalation needs it.
 
 ---
 
 ## 13. Day-to-day usage
 
-- **Mac:** open Claude Code in the project folder, talk to it in plain English. Optionally open `index.html` (or the live Pages URL) in a browser tab.
-- **Phone:** tap Yes/No on the nudge notifications (once `tick.py` is wired to ntfy + cron). For richer edits ("add goal", "pause this", "what's left this week?"), open `claude.ai/code`, point it at the GitHub repo, and chat.
+Three ways to update state, in order of friction:
 
-To regenerate the page after editing files manually:
-```
-python3 render.py
-```
+| Path | Speed | Use case |
+|---|---|---|
+| **Tap a card on the dashboard** | <1s | "I did it" — single goal, default status = done |
+| **Tap Yes/No on a phone notification** | <2s | When a nudge fires and you want to respond on the spot |
+| **`claude.ai/code` on phone or Mac terminal** | ~30s | Anything nuanced — partial credit, custom time, food logging, adding/pausing goals |
 
-Or just push — `render.yml` regenerates and redeploys to Pages on every commit to `main`.
+The dashboard rebuilds within ~30s of any state change. Analytics page rebuilds at the same time.
 
 ---
 
 ## 14. Out of scope for v1
 
-- Long-term goals (weekly/monthly cadence, progress trends across months)
+- Long-term goals (weekly/monthly cadence, progress trends across months) — **except** the analytics page covers a basic version of this
 - Workout-specific module (sets/reps, plans)
-- **Auto-detecting completion** (e.g., GitHub commits = "coded", fitness data = "worked out") — explicitly *never* doing this; the system asks instead
+- **Auto-detecting completion** — explicitly never doing this
 - Multi-user / sharing
-- Hard phone screen-lock — designed for, not built (the Lockdown level)
+- Hard phone screen-lock — designed for, not built
 - Native phone app
-- Click-to-mark on the dashboard itself — the page is read-only by design; marking happens via Claude or the ntfy Yes/No buttons
-- Mobile-friendly redesign of the dashboard layout — the current grid reflows to 2-up on phones (good enough), but phone-first usage stays via buttons + `claude.ai/code`
+- Mobile-friendly dashboard *redesign* (current reflow is good enough)
 
 ---
 
@@ -290,57 +303,55 @@ Or just push — `render.yml` regenerates and redeploys to Pages on every commit
 
 | Risk | Mitigation |
 |---|---|
-| Watcher accidentally messes up real Calendar events | Only ever touches events with our hidden marker |
-| Phone gets spammed during testing | tick.py dedupes per `(goal_id, nudge_time)` per day — won't repeat |
-| Pushes arrive while asleep | `quiet_hours` is a list of windows in `settings.yaml`; current value silences `23:00–05:30` (overnight) and `07:00–08:00` (daily 7am meeting) |
-| Mailbox name guessed | Long random topic (in gitignored settings); self-host ntfy later if paranoid |
-| Webhook abused by anyone who finds the URL | Webhook requires `X-Secret` header (or `?secret=`) matching `SHARED_SECRET` in Vercel env. 40 random chars. Anything else returns 403. |
-| Vercel deployment protection blocks ntfy callbacks | Disabled at the project level — webhook auth covers it. |
-| Tasker setup finicky on this Android version | Documented for stock Android first; degrade to "loud notification only" if Focus mode flip fails |
-| `state/` folder grows unbounded | Fine — text YAML stays tiny; even 10 years ≈ a few MB |
+| Phone gets spammed | Per-day dedup keyed `(goal_id, nudge_time)`. Quiet hours in settings. |
+| Mailbox name guessed | Long random topic (gitignored). |
+| Webhook abuse from public URL | `X-Secret` header required. Acceptable to leak via dashboard JS for personal use; rotate via Vercel + GitHub Actions secrets if needed. |
+| Vercel deployment protection blocks ntfy callbacks | Disabled at project level — webhook does its own auth. |
+| `state/` folder grows unbounded | Fine — text YAML stays tiny. |
+| GitHub Actions cron unreliable | Migrated primary cron to cron-job.org. GH Actions runs as backup. |
 
 ---
 
 ## 16. Open questions — resolved
 
-1. ~~**Per-goal nudge eligibility.**~~ Resolved: every active goal has an explicit `nudge_at` field (single `"HH:MM"` or list for multi check-ins). Priority no longer drives nudge timing.
-2. ~~**Webhook host.**~~ Resolved: Vercel. Function lives at `api/index.py`, public URL `/api/mark` via rewrite. Free hobby tier covers our load comfortably.
+1. ~~Per-goal nudge eligibility~~ → explicit `nudge_at` per goal.
+2. ~~Webhook host~~ → Vercel.
+3. ~~tick.py state-write strategy~~ → Vercel function does it via GitHub Contents API directly.
+4. ~~Multi-goal nudge format~~ → one push per goal (separately actionable Yes/No).
+5. ~~Food card visual prominence~~ → compact mono, fits in standard card height.
 
-New open questions for the next milestone:
-
-3. **tick.py state-write strategy in cron.** When the GitHub Action runs `tick.py` every 15 min, it needs to commit the updated `notifications_sent` back to today's state file so dedup persists across runs. Options: (a) Action commits state directly via `git push` in the workflow, (b) tick.py uses the same Vercel webhook to record nudges (via a new endpoint or action), (c) tick.py uses the GitHub Contents API directly. Leaning (a) — simplest, tick.py stays a pure script.
-4. **Multi-goal nudge format.** When multiple goals fire at once (e.g. 8:00 AM has multivitamins + skin-care), do they go as one combined push with a list, or N separate pushes (one per goal, each with its own Yes/No)? Separate is more actionable but spammy. Decide after first real day of pushes.
+New for next milestone:
+6. **Calendar integration design** — exact OAuth flow, where to host secrets.
+7. **Tasker phone-side setup** — vendor variations on Android.
 
 ---
 
 ## 17. Verification — how I know it works
 
-1. ✅ **Webhook smoke test** — curled `/api/mark?goal=test-webhook&status=done` with the secret header, got `200 ok`, saw the commit appear, watched the dashboard re-render. Done 2026-05-10.
-2. ⌛ **Full pipeline smoke test** — once `tick.py` is wired to ntfy + cron: trigger a tick at a fake time, confirm phone buzzes with a real notification, tap Yes, see the commit appear and the dashboard tile go to "done".
-3. ⌛ **One real week** — use it as the daily driver for a full week, then review:
-   - Did the dashboard reflect reality?
-   - Did pushes arrive at the right times without annoying me?
-   - Did the Yes/No buttons feel faster than opening Claude?
-   - Did I actually do more of my goals than the week before?
-   - What felt missing or wrong?
-
-That review decides what v2 looks like.
+1. ✅ **Webhook smoke test** — curl with secret returns 200; commit appears in repo.
+2. ✅ **Full pipeline smoke test** — ntfy push fires on schedule; Yes button marks done; dashboard refreshes.
+3. ✅ **Cron reliability** — cron-job.org dashboard shows 200 OK every 15 minutes.
+4. ✅ **Tap-to-mark** — dashboard card click flips immediately and persists.
+5. ⌛ **One real week** — using as daily driver from 2026-05-10. Day 3 of 7 today (2026-05-13). Review on 2026-05-17.
 
 ---
 
 ## 18. Where it goes after v1
 
-- **v2:** medium-term goals (weeks/months), workout module. Long-history analytics (since `state/` already has every day going back to v1) — e.g. "how often did I meditate this month?", "longest streak ever per goal".
-- **v3:** the Lockdown level — actual phone screen-lock when drastically off-track
-- **v4:** Claude proposes the day's plan in the morning based on calendar gaps + my goals
+- **v2:** calendar auto-block, Tasker no-distractions. Analytics improvements (monthly heatmap, weekly summaries).
+- **v3:** Lockdown level — phone screen-lock when drastically off-track.
+- **v4:** Claude proposes the day's plan in the morning based on calendar + goals.
 
 ---
 
 ## 19. Session log
 
-- **2026-05-06** — concept locked, PRD written. v0 skeleton built (YAML schema, render.py, sample dashboard). Goals expanded to actual 18-item list. Multi-day tracker added (grid + streaks). CSS extracted to `style.css`. First Claude design pass (warm paper bg, cobalt accent, Instrument Serif typography).
-- **2026-05-06 (later)** — Dashboard window narrowed from 14 days to 7 days. Full history continues to be stored unbounded in `state/`. PRD updated with: phone-update path via `claude.ai/code`, interactive ntfy notifications with Yes/No buttons + Vercel webhook, explicit "no auto-detection" stance, storage-vs-display split (§4a).
-- **2026-05-07** — Day window made fractional (`start_hour: 5.5` to support 05:30 wake). All 18 goals got explicit `nudge_at` times after a one-by-one pass. Priority dropped as the basis for nudge timing. `quiet_hours` migrated from a single start/end to a list of windows; added the `07:00–08:00` daily-meeting block.
-- **2026-05-10** — Full design refresh per `design_handoff_life_tracker/` (V1 — Editorial / paper-planner). Dropped the cobalt-blue grid-notebook look. New aesthetic: cream paper + 28px ruled grid, Newsreader italic + JetBrains Mono, pastel category accents, light + dark themes switchable via header toggle. Goals re-grouped into time-of-day sections instead of one flat grid. Cards reflow via auto-fill grid; 100vh lock dropped. Added `category` field to schema. Filter pills (functional, persisted) collapse empty sections. Removed `b12`, `creatine`, `talk-to-people` — 15 goals total.
-- **2026-05-10 (later)** — Repo pushed to GitHub (`piyushbhutani95-oss/life`, public). `render.yml` workflow built — re-renders + deploys to GitHub Pages on every push; live at `https://piyushbhutani95-oss.github.io/life/`. `tick.py` built (phase 1: print-only). ntfy topic generated, phone subscribed, test pushes verified. **Vercel webhook deployed end-to-end** at `https://life-sepia-psi.vercel.app/api/mark` — `api/mark.py` renamed to `api/index.py` for Vercel auto-detect, with `vercel.json` rewrite preserving the `/api/mark` URL; `.vercelignore` scopes the deploy; 5 env vars set; Deployment Protection disabled (webhook does its own shared-secret auth). Verified by curling the webhook with a test goal and watching the commit + dashboard update appear within seconds.
-- **Next up:** wire `tick.py`'s `emit_payload()` to actually POST to ntfy (with Yes/No action buttons pointing at the webhook + secret), then add `.github/workflows/tick.yml` to run it every 15 min.
+- **2026-05-06** — concept locked, v0 skeleton (YAML schema, render.py, sample dashboard). 18 goals. Multi-day tracker. CSS extracted.
+- **2026-05-06 (later)** — Dashboard window narrowed to 7 days; full history kept in `state/`. PRD updated with phone-update path via `claude.ai/code`, interactive ntfy buttons + Vercel webhook, "no auto-detection" stance.
+- **2026-05-07** — Day window made fractional (`start_hour: 5.5`). All 18 goals got explicit `nudge_at` times after a one-by-one pass. `quiet_hours` migrated to a list of windows; added 07:00–08:00 meeting block.
+- **2026-05-10** — Full design refresh per `design_handoff_life_tracker/`. Paper-planner aesthetic with Newsreader + JetBrains Mono. Goals grouped by time-of-day. Cards reflow via auto-fill grid; 100vh lock dropped temporarily. Added `category` field. Filter pills. Removed b12, creatine, talk-to-people — 15 goals.
+- **2026-05-10 (later)** — Repo pushed to GitHub. `render.yml` workflow built; live on Pages. `tick.py` phase-1 built. ntfy topic + Android subscription verified. Vercel webhook deployed end-to-end at `life-sepia-psi.vercel.app/api/mark` after Python detection / cron-pricing / consolidation rabbit holes. cron-job.org wired up. Cron now firing reliably.
+- **2026-05-11** — Added `food` as the 16th goal (3 meal-time nudges). Food card on dashboard shows running kcal + macros against targets from new `settings.yaml` → `nutrition` block. Food status derived from `food` list, not Yes/No completions — card stays "open" through the day, auto-strikes after `end_hour`. Compact mono styling so the food card fits the standard card height.
+- **2026-05-12** — Desktop locked to 100vh, no scroll. Card + gap sizes use `clamp(min, vh, max)` to fill tall monitors without breaking on short laptops. Mobile reflow confirmed. **Tap-to-mark** wired up: dashboard JS POSTs to `/api/mark` with X-Secret on card click; CORS + OPTIONS handler added to `api/index.py`; webhook URL + secret injected into HTML head from env vars (CI) or settings.yaml (local).
+- **2026-05-13** — PRD updated to v0.5 reflecting food + tap-to-mark + analytics. **Analytics page** (`analytics.html`) added: per-goal stats (X/Y days, current/longest streak), food averages, full-history strip. Generated by `render.py` alongside `index.html`; both rebuild on every push via the render workflow.
+- **Next up:** one real week of use ending 2026-05-17, then sit down and review per §17.
