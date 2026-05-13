@@ -112,4 +112,9 @@ food:
   protein_g: 7
   carbs_g: 10
   fat_g: 7
+- item: half pistachio croissant
+  kcal: 250
+  protein_g: 5
+  carbs_g: 24
+  fat_g: 16
 scheduled_blocks: []
