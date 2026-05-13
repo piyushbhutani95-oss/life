@@ -88,6 +88,14 @@ notifications_sent:
   nudge_time: '19:00'
   level: soft
   at: '19:00'
+- goal_id: food
+  nudge_time: '20:00'
+  level: firm
+  at: '20:00'
+- goal_id: guitar
+  nudge_time: '20:00'
+  level: firm
+  at: '20:00'
 food:
 - item: Supply6 chocolate protein wafer bar (40g)
   meal: breakfast
