@@ -27,6 +27,9 @@ completions:
 - goal_id: code
   status: done
   at: 09:43
+- goal_id: respond-to-people
+  status: done
+  at: '11:19'
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
