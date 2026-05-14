@@ -42,4 +42,15 @@ notifications_sent:
   nudge_time: '10:00'
   level: soft
   at: '10:00'
+food:
+- item: small cup of tea
+  kcal: 60
+  protein_g: 2
+  carbs_g: 6
+  fat_g: 3
+- item: 50g cooked oats (plain, water)
+  kcal: 40
+  protein_g: 2
+  carbs_g: 7
+  fat_g: 1
 scheduled_blocks: []
