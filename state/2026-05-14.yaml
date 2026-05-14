@@ -9,6 +9,9 @@ completions:
 - goal_id: step-out
   status: done
   at: 09:13
+- goal_id: bath
+  status: done
+  at: '14:59'
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
