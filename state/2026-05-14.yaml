@@ -53,4 +53,10 @@ food:
   protein_g: 2
   carbs_g: 7
   fat_g: 1
+- item: 2 slices multigrain bread (54g) + 4 eggs
+  meal: breakfast
+  kcal: 450
+  protein_g: 38
+  carbs_g: 20
+  fat_g: 25
 scheduled_blocks: []
