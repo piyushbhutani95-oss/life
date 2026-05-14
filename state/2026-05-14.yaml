@@ -63,4 +63,10 @@ food:
   protein_g: 38
   carbs_g: 20
   fat_g: 25
+- item: 100g cooked rice + 200g cooked dal + 50g bhindi
+  meal: lunch
+  kcal: 425
+  protein_g: 18
+  carbs_g: 63
+  fat_g: 12
 scheduled_blocks: []
