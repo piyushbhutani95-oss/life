@@ -24,4 +24,11 @@ notifications_sent:
   nudge_time: 06:45
   level: soft
   at: 06:45
+food:
+- item: 100g overnight oats with milk, half-scoop whey, flax, chia, dash of honey
+  meal: breakfast
+  kcal: 220
+  protein_g: 16
+  carbs_g: 24
+  fat_g: 8
 scheduled_blocks: []
