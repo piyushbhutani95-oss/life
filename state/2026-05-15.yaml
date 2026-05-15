@@ -46,4 +46,9 @@ food:
   protein_g: 16
   carbs_g: 24
   fat_g: 8
+- item: 350g cooked dal + 2 slices multigrain bread (54g)
+  kcal: 555
+  protein_g: 37
+  carbs_g: 71
+  fat_g: 17
 scheduled_blocks: []
