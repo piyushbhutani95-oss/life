@@ -58,4 +58,9 @@ food:
   protein_g: 37
   carbs_g: 71
   fat_g: 17
+- item: 100g cooked rice + 150g cooked dal + 2 eggs + 100g jackfruit sabzi
+  kcal: 590
+  protein_g: 28
+  carbs_g: 72
+  fat_g: 22
 scheduled_blocks: []
