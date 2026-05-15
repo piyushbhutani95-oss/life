@@ -50,6 +50,10 @@ notifications_sent:
   nudge_time: '15:00'
   level: soft
   at: '15:00'
+- goal_id: write
+  nudge_time: '17:00'
+  level: soft
+  at: '17:00'
 food:
 - item: 100g overnight oats with milk, half-scoop whey, flax, chia, dash of honey
   meal: breakfast
