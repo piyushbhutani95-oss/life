@@ -74,6 +74,10 @@ notifications_sent:
   nudge_time: '20:00'
   level: firm
   at: '20:00'
+- goal_id: language
+  nudge_time: '20:30'
+  level: soft
+  at: '20:30'
 food:
 - item: 100g overnight oats with milk, half-scoop whey, flax, chia, dash of honey
   meal: breakfast
