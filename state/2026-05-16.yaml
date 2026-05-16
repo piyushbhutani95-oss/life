@@ -81,4 +81,10 @@ food:
   protein_g: 28
   carbs_g: 25
   fat_g: 17
+- item: 100g cooked rice + 200g cooked chole + 100g paneer (Mother Dairy)
+  meal: lunch
+  kcal: 685
+  protein_g: 33
+  carbs_g: 64
+  fat_g: 35
 scheduled_blocks: []
