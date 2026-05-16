@@ -53,4 +53,21 @@ notifications_sent:
   nudge_time: '10:00'
   level: soft
   at: '10:00'
+food:
+- item: 150g overnight oats with milk, half-scoop whey, flax, chia, honey
+  meal: breakfast
+  kcal: 330
+  protein_g: 24
+  carbs_g: 36
+  fat_g: 12
+- item: protein shake (25g whey, water)
+  kcal: 120
+  protein_g: 25
+  carbs_g: 3
+  fat_g: 2
+- item: 2 slices Bajo super-foods bread (54g) + 3 eggs
+  kcal: 370
+  protein_g: 28
+  carbs_g: 25
+  fat_g: 17
 scheduled_blocks: []
