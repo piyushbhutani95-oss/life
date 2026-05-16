@@ -15,4 +15,12 @@ notifications_sent:
   nudge_time: 06:00
   level: soft
   at: 06:00
+- goal_id: bath
+  nudge_time: 06:45
+  level: soft
+  at: 06:45
+- goal_id: skincare
+  nudge_time: 06:45
+  level: soft
+  at: 06:45
 scheduled_blocks: []
