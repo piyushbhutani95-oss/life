@@ -18,6 +18,9 @@ completions:
 - goal_id: journal
   status: done
   at: 09:59
+- goal_id: step-out
+  status: done
+  at: 09:59
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
