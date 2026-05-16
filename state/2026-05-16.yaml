@@ -6,6 +6,9 @@ completions:
 - goal_id: journal
   status: done
   at: 06:09
+- goal_id: workout
+  status: done
+  at: 09:59
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
