@@ -63,9 +63,9 @@ food:
   protein_g: 12
   carbs_g: 18
   fat_g: 6
-- item: 4 eggs + 2 slices protein bread (54g) + 200g curd
+- item: 4 eggs + 2 slices Bajo super-foods bread (54g) + 200g curd
   kcal: 575
-  protein_g: 45
-  carbs_g: 29
-  fat_g: 32
+  protein_g: 41
+  carbs_g: 35
+  fat_g: 30
 scheduled_blocks: []
