@@ -89,4 +89,9 @@ food:
   protein_g: 40
   carbs_g: 68
   fat_g: 22
+- item: 100g boiled chicken breast
+  kcal: 170
+  protein_g: 31
+  carbs_g: 0
+  fat_g: 4
 scheduled_blocks: []
