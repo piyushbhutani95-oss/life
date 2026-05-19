@@ -793,6 +793,23 @@ body[data-page="analytics"] .cell {
   .todos__handle { padding: 12px 5px; font-size: 9px; }
 }
 
+/* Drawer-open shift — desktop only.
+   When the drawer is open, shrink the body content area by the drawer
+   width so the dashboard (header, cards, footer) reflows into the
+   visible zone instead of sitting under the drawer. Drawer itself is
+   position:fixed so it stays anchored to the viewport's right edge. */
+@media (min-width: 901px) {
+  body {
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      padding-right 0.24s cubic-bezier(.2,.7,.2,1);
+  }
+  body:has(.todos[data-todos-open="true"]) {
+    padding-right: 340px;
+  }
+}
+
 /* ── motion ───────────────────────────────────────────────── */
 
 @keyframes ink-in {
