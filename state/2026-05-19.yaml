@@ -51,6 +51,10 @@ notifications_sent:
   nudge_time: '10:00'
   level: soft
   at: '10:00'
+- goal_id: food
+  nudge_time: '13:00'
+  level: soft
+  at: '13:00'
 food:
 - item: 3 eggs + 2 slices Bajo protein bread (54g) + small cup low-sugar tea
   meal: breakfast
