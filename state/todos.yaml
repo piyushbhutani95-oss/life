@@ -1,0 +1,11 @@
+# Running to-do list. Lives across days (unlike state/YYYY-MM-DD.yaml).
+# Edited by humans (via Claude or the dashboard side panel) and by the
+# /api/todo endpoint. Schema:
+#
+# todos:
+#   - id:       short string, unique within this file
+#     text:     freeform note
+#     added_at: "YYYY-MM-DDTHH:MM"  (IST)
+#     done_at:  null  |  "YYYY-MM-DDTHH:MM"  (IST)
+
+todos: []

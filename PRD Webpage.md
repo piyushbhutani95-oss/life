@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Author** | Piyush |
-| **Status** | v0.5 — food card, tap-to-mark, analytics |
-| **Last updated** | 2026-05-13 |
+| **Status** | v0.7 — side to-do panel (synced YAML scratchpad) |
+| **Last updated** | 2026-05-19 |
 | **Repo** | `/Users/piyushbhutani/Documents/2026 /Code/Life` (GitHub: `piyushbhutani95-oss/life`) |
 
 ---
@@ -15,9 +15,9 @@ A personal webpage that helps me actually do what I say I'll do each day.
 
 I tell it my daily goals. It shows me, at any moment, what's done and what's left, and how I've been doing across the past week. As the day wears on and I haven't done things, it nudges me — gently first, then louder. Worst case, it flips my phone into a no-distractions mode so I stop scrolling and get back to work.
 
-**This is not an app.** No login, no UI to click through, no buttons to design. It's a webpage I look at, and I talk to Claude (in the terminal *or on my phone via Claude Code on the web*) to update it. Claude is my keyboard. *(Update: there's now also a one-tap mark mechanism on the dashboard itself for the common "I did this" case — see §5.)*
+**This is not an app.** No login, no UI to click through, no buttons to design. It's a webpage I look at, and I talk to Claude (in the terminal *or on my phone via Claude Code on the web*) to update it. Claude is my keyboard. *(Update: there's now also a one-tap mark mechanism on the dashboard itself for the common "I did this" case, plus a typing-allowed side panel for ad-hoc to-dos — see §5.)*
 
-Scope for now: **daily goals + a single food/calorie card**. Long-term goals, workouts as a separate module, and anything that auto-detects whether I did something — all later. I never want auto-detection of completion; the system can *ask* me whether something is done, but it shouldn't guess.
+Scope for now: **daily goals + a single food/calorie card + a running to-do scratchpad**. Long-term goals, workouts as a separate module, and anything that auto-detects whether I did something — all later. I never want auto-detection of completion; the system can *ask* me whether something is done, but it shouldn't guess.
 
 ---
 
@@ -67,13 +67,15 @@ Open `index.html` in a browser, or visit the live URL `https://piyushbhutani95-o
 - Today's status quietly affects the whole card — done = 50% opacity + strikethrough; partial = 78%; skipped = muted; open = default.
 - **Tap-to-mark**: clicking an open card POSTs `done` to the webhook via in-page JS and optimistically flips the card to done immediately. The Food card is exempt (see §4c).
 
+**Side panel** — a vertical `to-do` handle on the right edge opens a drawer for the ad-hoc to-do list (see §4e).
+
 **Footer:** one thin mono line — `2026-05-13 · last nudge · soft @ 13:00 · v1` with a small `analytics` link to the analytics page (§4d).
 
 ---
 
 ## 4a. History — what's stored vs what's shown
 
-**Storage (the source of truth):** every day gets its own file under `state/YYYY-MM-DD.yaml` and is kept forever — git is the database. Long-term analysis reads straight from this folder.
+**Storage (the source of truth):** every day gets its own file under `state/YYYY-MM-DD.yaml` and is kept forever — git is the database. Long-term analysis reads straight from this folder. The running to-do list is stored separately at `state/todos.yaml` (cross-day, see §4e).
 
 **Display (dashboard):** each card's strip shows only the last 7 days. The analytics page (§4d) reads all history.
 
@@ -119,26 +121,75 @@ Targets live in `settings.yaml` → `nutrition` block (default 2200 kcal / 130p 
 
 ## 4d. Analytics page
 
-A separate `analytics.html` at `/analytics.html` on GitHub Pages. Reads **all** `state/*.yaml` files (full history, not just 7 days) and shows per-goal aggregate stats:
+A separate `analytics.html` at `/analytics.html` on GitHub Pages. Designed as a **weekly-review** page (used ~once a week), with progressive disclosure: scan-level top, depth available below. Same paper-planner aesthetic as the dashboard.
 
-- Total `X / Y` days done and percentage.
-- Current streak + longest streak.
-- A history strip covering every day in `state/` (auto-sizes — gets compressed as you accumulate weeks).
-- **Food** has its own card showing days-logged, average daily kcal + macros, best/worst days.
+**Header**
+- Title `Analytics` · period span (e.g. `6 May → 13 May · 8 days`).
+- **Range toggle** — `7d / 30d / all`. Persists in `localStorage`. Default `7d`. Server-rendered as 3 bundles; CSS shows the active one.
+- Theme toggle, category filter pills.
 
-Same paper-planner aesthetic as the main dashboard. Footer carries a `← dashboard` link.
+**1. Hero band** — single italic sentence + 4-row category heatmap:
+> *"7 May — 13 May · **28 / 112** · 25% · strongest **health** · drifting **skills**"*
+
+The heatmap is one row per category × N day cells, intensity = % done that day for that category. Reads at a glance.
+
+**2. Wins / Drifts** — auto-picked callouts (max 3 each), deduped by goal:
+- **Wins**: active streaks ≥3, or `+25%` swings vs prior period.
+- **Drifts**: zero-this-period goals, broken streaks (with break date), `-25%` drops.
+
+**3. Food block** — full-width, distinct shape (mint stripe, larger than goal cards):
+- Big number: avg kcal vs target.
+- Inline kcal sparkline with target as a dotted line, dots on logged days.
+- Macro stack bars (protein/carbs/fat) vs targets.
+- Best / worst day stamps.
+
+**4. Per-goal table** — thin row per goal (replaces the old card grid):
+- Category dot · italic title · period history strip · `now N · best M` streaks · `% done`.
+- Click a row → expands inline to a **by-weekday** pattern (Mon–Sun heatmap bars).
+
+**5. Almanac** — range-independent. One row per active goal × every day in `state/`. Cells colored by status (`done` / `skipped` / `open`). Auto-compresses as history grows.
+
+**Footer**: `paper-planner · weekly review · v0.6` + `← dashboard` link.
 
 Generated by the same `render.py` script as `index.html` — both rebuild on every commit via the render workflow.
 
 ---
 
+## 4e. To-do side panel
+
+A small drawer that slides out from the right edge of the dashboard. Holds a **running** to-do list (not daily) for one-off tasks that don't belong as recurring goals — *"pick up keys", "email Maya"*. Deliberately separate from the 16 goals.
+
+**Storage**: single file `state/todos.yaml` (committed, lives across days):
+```yaml
+todos:
+  - id: t-1747661234
+    text: "Pick up keys from neighbor"
+    added_at: "2026-05-19T10:30"
+    done_at: null   # or "YYYY-MM-DDTHH:MM" when checked
+```
+
+**Two write paths, same file** — the "Claude is the keyboard" rule bends here so the panel can be a real notepad:
+- **Browser** — the side panel has a one-line input at the bottom; pressing Enter POSTs to `/api/todo?action=add&text=…`. Tap the checkbox to mark done (`action=check`); tap again to undo (`action=uncheck`). Same webhook host + `X-Secret` as `/api/mark`.
+- **Claude** — say *"add to-do: pick up keys"* on Mac or phone; Claude appends to `state/todos.yaml` and commits. Pages rebuild in ~30s and the panel reflects it.
+
+**UI**
+- Closed by default. A small vertical handle (`to-do` + open-count badge) on the right edge.
+- Click → drawer slides in from the right (340px on desktop, ~88vw on phones). Esc closes.
+- Open list at top, italic Newsreader text, small round checkbox. Past `done_at` entries appear in a faded "recently done" group below (last 5 only) — tap to unmark if you misclicked.
+- Empty state: *"nothing here · type below or ask Claude"*.
+
+**Why a typing surface here** — daily goals are recurring and structured (category, window, nudge_at), so editing them via Claude makes sense. To-dos are ad-hoc and ephemeral; typing one is faster than narrating it. Two paths, same YAML.
+
+---
+
 ## 5. How I talk to it
 
-Three surfaces, same data:
+Four surfaces, same data:
 
 **Mac terminal** — open Claude Code in the project folder, say things in plain English.
 **Phone (`claude.ai/code`)** — connect to the GitHub repo, type plain English. Always say "commit directly to main" to avoid stranded branches.
 **Dashboard tap-to-mark** — open the dashboard on any device, click any open card to mark it done. Webhook handles it.
+**Dashboard to-do panel** — open the side drawer, type a one-line to-do, tap the checkbox to mark done. The only typing surface in the UI; reserved for ad-hoc one-offs that don't belong as recurring goals (§4e).
 
 Examples (Mac or phone):
 - *"Add a goal: meditate 15 minutes, prefer mornings"*
@@ -148,6 +199,7 @@ Examples (Mac or phone):
 - *"What's left for today?"*
 - *"Pause guitar for now"*
 - *"Recategorize step-out as health"*
+- *"Add to-do: pick up keys from neighbor"*
 
 Claude edits the underlying YAML; `render.py` regenerates the dashboard + analytics; render workflow deploys to Pages within ~30s.
 
@@ -213,7 +265,8 @@ One-time Android setup with Tasker (~$3.50) and the free ntfy app. When a "Hard"
 ├── settings.yaml                          ✓ built (gitignored — holds secrets)
 ├── goals.yaml                             ✓ built — 16 goals (15 normal + Food)
 ├── state/
-│   ├── 2026-05-13.yaml                    ✓ today
+│   ├── 2026-05-13.yaml                    ✓ per-day completions, food, nudges
+│   ├── todos.yaml                         ✓ running to-do list (cross-day)
 │   └── …                                  ⌛ accumulates forever
 ├── render.py                              ✓ built — YAML → index.html + analytics.html
 ├── tick.py                                ✓ built (local fallback; cron uses api/)
@@ -221,9 +274,9 @@ One-time Android setup with Tasker (~$3.50) and the free ntfy app. When a "Hard"
 ├── index.html                             ✓ generated (dashboard)
 ├── analytics.html                         ✓ generated (analytics page)
 ├── api/
-│   └── index.py                           ✓ deployed — /api/mark + /api/tick + CORS
+│   └── index.py                           ✓ deployed — /api/mark + /api/tick + /api/todo + CORS
 ├── requirements.txt                       ✓ Vercel function deps (PyYAML)
-├── vercel.json                            ✓ rewrites /api/mark → /api/index
+├── vercel.json                            ✓ rewrites /api/mark + /api/todo → /api/index
 ├── .github/workflows/
 │   ├── render.yml                         ✓ re-render both HTML files + deploy
 │   └── tick.yml                           ✓ fallback ping for the cron
@@ -275,12 +328,13 @@ Loaded in `goals.yaml`. Each goal has a `category`, `window`, and explicit `nudg
 
 ## 13. Day-to-day usage
 
-Three ways to update state, in order of friction:
+Four ways to update state, in order of friction:
 
 | Path | Speed | Use case |
 |---|---|---|
 | **Tap a card on the dashboard** | <1s | "I did it" — single goal, default status = done |
 | **Tap Yes/No on a phone notification** | <2s | When a nudge fires and you want to respond on the spot |
+| **Type a to-do in the side panel** | ~5s | Ad-hoc one-off ("pick up keys"). Lives in `state/todos.yaml`. |
 | **`claude.ai/code` on phone or Mac terminal** | ~30s | Anything nuanced — partial credit, custom time, food logging, adding/pausing goals |
 
 The dashboard rebuilds within ~30s of any state change. Analytics page rebuilds at the same time.
@@ -309,6 +363,7 @@ The dashboard rebuilds within ~30s of any state change. Analytics page rebuilds 
 | Vercel deployment protection blocks ntfy callbacks | Disabled at project level — webhook does its own auth. |
 | `state/` folder grows unbounded | Fine — text YAML stays tiny. |
 | GitHub Actions cron unreliable | Migrated primary cron to cron-job.org. GH Actions runs as backup. |
+| To-do list grows unbounded | `done_at` entries stay in the YAML but only the last 5 render. Periodic manual prune via Claude. |
 
 ---
 
@@ -319,10 +374,11 @@ The dashboard rebuilds within ~30s of any state change. Analytics page rebuilds 
 3. ~~tick.py state-write strategy~~ → Vercel function does it via GitHub Contents API directly.
 4. ~~Multi-goal nudge format~~ → one push per goal (separately actionable Yes/No).
 5. ~~Food card visual prominence~~ → compact mono, fits in standard card height.
+6. ~~Where do ad-hoc one-offs live?~~ → `state/todos.yaml` + side panel; not in `goals.yaml`.
 
 New for next milestone:
-6. **Calendar integration design** — exact OAuth flow, where to host secrets.
-7. **Tasker phone-side setup** — vendor variations on Android.
+7. **Calendar integration design** — exact OAuth flow, where to host secrets.
+8. **Tasker phone-side setup** — vendor variations on Android.
 
 ---
 
@@ -332,7 +388,8 @@ New for next milestone:
 2. ✅ **Full pipeline smoke test** — ntfy push fires on schedule; Yes button marks done; dashboard refreshes.
 3. ✅ **Cron reliability** — cron-job.org dashboard shows 200 OK every 15 minutes.
 4. ✅ **Tap-to-mark** — dashboard card click flips immediately and persists.
-5. ⌛ **One real week** — using as daily driver from 2026-05-10. Day 3 of 7 today (2026-05-13). Review on 2026-05-17.
+5. ⌛ **To-do panel** — type → Enter → commits to `state/todos.yaml`; tap checkbox → flips + commits; Claude-added entry shows up after next render. Smoke-test on 2026-05-19 deploy.
+6. ⌛ **One real week** — using as daily driver from 2026-05-10. State files end 2026-05-13; pick back up and complete the cycle.
 
 ---
 
@@ -354,4 +411,6 @@ New for next milestone:
 - **2026-05-11** — Added `food` as the 16th goal (3 meal-time nudges). Food card on dashboard shows running kcal + macros against targets from new `settings.yaml` → `nutrition` block. Food status derived from `food` list, not Yes/No completions — card stays "open" through the day, auto-strikes after `end_hour`. Compact mono styling so the food card fits the standard card height.
 - **2026-05-12** — Desktop locked to 100vh, no scroll. Card + gap sizes use `clamp(min, vh, max)` to fill tall monitors without breaking on short laptops. Mobile reflow confirmed. **Tap-to-mark** wired up: dashboard JS POSTs to `/api/mark` with X-Secret on card click; CORS + OPTIONS handler added to `api/index.py`; webhook URL + secret injected into HTML head from env vars (CI) or settings.yaml (local).
 - **2026-05-13** — PRD updated to v0.5 reflecting food + tap-to-mark + analytics. **Analytics page** (`analytics.html`) added: per-goal stats (X/Y days, current/longest streak), food averages, full-history strip. Generated by `render.py` alongside `index.html`; both rebuild on every push via the render workflow.
-- **Next up:** one real week of use ending 2026-05-17, then sit down and review per §17.
+- **2026-05-13 (later)** — **Analytics redesigned** (v0.6). Old per-goal card grid replaced with a weekly-review layout: hero sentence + category heatmap → wins/drifts callouts → distinct full-width food block (kcal sparkline + macro stacks) → expandable per-goal rows (with day-of-week pattern) → all-time almanac heatmap. Range toggle (7d / 30d / all) server-rendered as 3 bundles, CSS-switched. New `render.py` helpers: `period_dates`, `period_summary`, `category_heatmap`, `wins_drifts`, `food_period`, `goal_dow_pattern`. All visuals inline SVG / CSS — no new deps.
+- **2026-05-19** — **To-do side panel** (v0.7). New `state/todos.yaml` storage (cross-day, single file). New `/api/todo` route on `api/index.py` with `add | check | uncheck | delete` actions. `render.py` reads todos, renders a right-edge drawer with a vertical handle, italic open list, "recently done" group, and a one-line typing input. Two write paths: browser (POST `/api/todo`) and Claude (edit YAML directly). First deliberate break of the "no typing surface" rule — reserved for ad-hoc one-offs, not for daily goals. Esc / close-button to dismiss; open state persists in `localStorage`.
+- **Next up:** smoke-test the panel end-to-end on the live deploy; pick the daily-driver cycle back up (state files paused 2026-05-13).

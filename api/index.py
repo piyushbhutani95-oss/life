@@ -1,5 +1,5 @@
 """
-api/index.py — single Vercel serverless function that handles BOTH:
+api/index.py — single Vercel serverless function that handles ALL routes:
 
   • /api/mark (or /api/index) → mark a goal as done/skipped/partial
        Triggered by the Yes/No action buttons on phone notifications.
@@ -10,6 +10,11 @@ api/index.py — single Vercel serverless function that handles BOTH:
        Computes which goals are nudge-eligible right now, sends one ntfy
        push per eligible goal (each with Yes/No buttons that hit /api/mark),
        writes notifications_sent records back to today's state YAML.
+
+  • /api/todo → manage the running to-do list (state/todos.yaml)
+       action=add (text=...), action=check|uncheck|delete (id=...).
+       Called by the dashboard side-panel JS. Persists across days; Claude
+       can also edit state/todos.yaml directly for nuanced changes.
 
 Both routes are auth-gated. /api/mark uses X-Secret header or ?secret=
 param (matching SHARED_SECRET). /api/tick uses Authorization: Bearer
@@ -166,6 +171,67 @@ def put_file(path: str, content: str, sha: str | None, message: str,
     if sha:
         payload["sha"] = sha
     return _github("PUT", f"/repos/{REPO}/contents/{path}", payload)
+
+
+# ---------- /api/todo — running to-do list ----------
+
+TODOS_PATH = "state/todos.yaml"
+
+
+def _now_stamp() -> str:
+    return now_local().strftime("%Y-%m-%dT%H:%M")
+
+
+def _load_todos() -> tuple[dict, str | None]:
+    content, sha = get_file(TODOS_PATH)
+    data = yaml.safe_load(content) if (content and content.strip()) else {}
+    if not isinstance(data, dict):
+        data = {}
+    data.setdefault("todos", [])
+    return data, sha
+
+
+def _save_todos(data: dict, sha: str | None, message: str) -> None:
+    new_content = yaml.safe_dump(data, sort_keys=False, default_flow_style=False,
+                                 allow_unicode=True)
+    put_file(TODOS_PATH, new_content, sha, message, author_name="life-webhook")
+
+
+def add_todo(text: str) -> str:
+    data, sha = _load_todos()
+    existing = {t.get("id") for t in data["todos"]}
+    base = f"t-{int(now_local().timestamp())}"
+    new_id, n = base, 0
+    while new_id in existing:
+        n += 1
+        new_id = f"{base}-{n}"
+    data["todos"].append({
+        "id": new_id,
+        "text": text,
+        "added_at": _now_stamp(),
+        "done_at": None,
+    })
+    _save_todos(data, sha, f"add todo: {text[:48]}")
+    return new_id
+
+
+def set_todo_done(todo_id: str, done: bool) -> None:
+    data, sha = _load_todos()
+    target = next((t for t in data["todos"] if t.get("id") == todo_id), None)
+    if not target:
+        raise ValueError(f"todo id not found: {todo_id}")
+    target["done_at"] = _now_stamp() if done else None
+    word = "check" if done else "uncheck"
+    _save_todos(data, sha, f"{word} todo {todo_id}")
+
+
+def delete_todo(todo_id: str) -> None:
+    data, sha = _load_todos()
+    before = len(data["todos"])
+    data["todos"] = [t for t in data["todos"] if t.get("id") != todo_id]
+    if len(data["todos"]) == before:
+        raise ValueError(f"todo id not found: {todo_id}")
+    _save_todos(data, sha, f"delete todo {todo_id}")
 
 
 # ---------- /api/mark — record a completion ----------
@@ -430,12 +496,55 @@ class handler(BaseHTTPRequestHandler):
         except Exception as e:
             self._respond(500, f"error: {type(e).__name__}: {e}")
 
+    # ---- /api/todo ----
+
+    def _handle_todo(self) -> None:
+        params = self._params()
+        if not SHARED_SECRET or self._shared_secret(params) != SHARED_SECRET:
+            self._respond(403, "forbidden")
+            return
+        action = params.get("action", "").strip()
+        try:
+            if action == "add":
+                text = params.get("text", "").strip()
+                if not text:
+                    self._respond(400, "missing 'text'")
+                    return
+                new_id = add_todo(text)
+                self._respond(200, {"ok": True, "id": new_id})
+                return
+            if action in ("check", "uncheck"):
+                tid = params.get("id", "").strip()
+                if not tid:
+                    self._respond(400, "missing 'id'")
+                    return
+                set_todo_done(tid, done=(action == "check"))
+                self._respond(200, {"ok": True})
+                return
+            if action == "delete":
+                tid = params.get("id", "").strip()
+                if not tid:
+                    self._respond(400, "missing 'id'")
+                    return
+                delete_todo(tid)
+                self._respond(200, {"ok": True})
+                return
+            self._respond(400, "action must be add|check|uncheck|delete")
+        except ValueError as e:
+            self._respond(404, str(e))
+        except urllib.error.HTTPError as e:
+            self._respond(502, f"github error {e.code}: {e.read().decode()[:200]}")
+        except Exception as e:
+            self._respond(500, f"error: {type(e).__name__}: {e}")
+
     # ---- routing ----
 
     def _route(self) -> None:
         path = self._path()
         if "tick" in path:
             self._handle_tick()
+        elif "todo" in path:
+            self._handle_todo()
         else:
             self._handle_mark()
 
