@@ -35,3 +35,7 @@ todos:
   text: check working days
   added_at: 2026-05-19T15:40
   done_at: 2026-05-19T19:42
+- id: t-1779210266
+  text: usa taxes
+  added_at: 2026-05-19T22:34
+  done_at: null
