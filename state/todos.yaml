@@ -31,3 +31,7 @@ todos:
   text: ifcap memo
   added_at: 2026-05-19T09:17
   done_at: null
+- id: t-1779185439
+  text: check working days
+  added_at: 2026-05-19T15:40
+  done_at: null
