@@ -3,6 +3,9 @@ completions:
 - goal_id: wake-early
   status: done
   at: 06:36
+- goal_id: read
+  status: done
+  at: 06:36
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
