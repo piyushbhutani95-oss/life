@@ -11,3 +11,7 @@ todos:
   text: course
   added_at: 2026-05-19T08:46
   done_at: null
+- id: t-1779160732
+  text: squash website
+  added_at: 2026-05-19T08:48
+  done_at: null
