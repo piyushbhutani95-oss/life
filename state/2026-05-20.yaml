@@ -76,10 +76,11 @@ food:
   protein_g: 9
   carbs_g: 15
   fat_g: 7
-- item: 90g high-protein tofu + 150g cooked rice + bowl of baingan chokha
+- item: 90g high-protein tofu + 150g cooked rice + bowl of parwal (pointed gourd)
+    chokha
   meal: lunch
-  kcal: 520
+  kcal: 430
   protein_g: 23
-  carbs_g: 60
-  fat_g: 19
+  carbs_g: 54
+  fat_g: 14
 scheduled_blocks: []
