@@ -105,4 +105,9 @@ food:
   protein_g: 23
   carbs_g: 54
   fat_g: 14
+- item: protein shake (25g whey, water)
+  kcal: 120
+  protein_g: 25
+  carbs_g: 3
+  fat_g: 2
 scheduled_blocks: []
