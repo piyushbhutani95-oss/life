@@ -38,4 +38,15 @@ notifications_sent:
   nudge_time: 09:00
   level: soft
   at: 09:00
+food:
+- item: small cup of tea (milk, no sugar)
+  kcal: 35
+  protein_g: 2
+  carbs_g: 2
+  fat_g: 2
+- item: little bit bhindi (~30g, with oil)
+  kcal: 30
+  protein_g: 1
+  carbs_g: 2
+  fat_g: 2
 scheduled_blocks: []
