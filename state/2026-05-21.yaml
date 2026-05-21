@@ -100,4 +100,20 @@ food:
   protein_g: 33
   carbs_g: 63
   fat_g: 18
+- item: protein shake (25g whey, water)
+  kcal: 120
+  protein_g: 25
+  carbs_g: 3
+  fat_g: 2
+- item: 2 slices high protein bread (54g)
+  kcal: 134
+  protein_g: 13
+  carbs_g: 18
+  fat_g: 3
+- item: some rice + dal + tofu (uncertain portions, estimated ~80g rice, ~150g dal,
+    ~80g tofu)
+  kcal: 410
+  protein_g: 26
+  carbs_g: 47
+  fat_g: 13
 scheduled_blocks: []
