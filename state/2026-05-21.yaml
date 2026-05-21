@@ -55,4 +55,11 @@ food:
   protein_g: 29
   carbs_g: 18
   fat_g: 27
+- item: 100g cooked rice + 150g cooked dal + 100g kaddu sabzi + 100g high-protein
+    tofu
+  meal: lunch
+  kcal: 545
+  protein_g: 33
+  carbs_g: 63
+  fat_g: 18
 scheduled_blocks: []
