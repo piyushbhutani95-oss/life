@@ -3,6 +3,9 @@ completions:
 - goal_id: wake-early
   status: done
   at: 06:45
+- goal_id: guitar
+  status: done
+  at: 06:51
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
