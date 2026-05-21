@@ -6,6 +6,9 @@ completions:
 - goal_id: guitar
   status: done
   at: 06:51
+- goal_id: multivitamins
+  status: done
+  at: '15:12'
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
