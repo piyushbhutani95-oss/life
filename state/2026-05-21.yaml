@@ -39,4 +39,12 @@ notifications_sent:
   nudge_time: '10:00'
   level: soft
   at: '10:00'
+food:
+- item: 20% of Mexican Baja Black Bean Earth bowl (half of yesterday's leftovers)
+    + 4 boiled eggs
+  meal: breakfast
+  kcal: 440
+  protein_g: 29
+  carbs_g: 18
+  fat_g: 27
 scheduled_blocks: []
