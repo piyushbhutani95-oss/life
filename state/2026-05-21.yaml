@@ -111,9 +111,9 @@ food:
   carbs_g: 18
   fat_g: 3
 - item: some rice + dal + tofu (uncertain portions, estimated ~80g rice, ~150g dal,
-    ~80g tofu)
-  kcal: 410
-  protein_g: 26
-  carbs_g: 47
-  fat_g: 13
+    ~50g tofu)
+  kcal: 365
+  protein_g: 21
+  carbs_g: 46
+  fat_g: 10
 scheduled_blocks: []
