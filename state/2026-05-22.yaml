@@ -33,4 +33,20 @@ notifications_sent:
   nudge_time: '10:00'
   level: soft
   at: '10:00'
+food:
+- item: small cup of chai (light sugar assumed)
+  kcal: 55
+  protein_g: 2
+  carbs_g: 6
+  fat_g: 2.5
+- item: energy ball (dates/nuts/oats)
+  kcal: 110
+  protein_g: 4
+  carbs_g: 13
+  fat_g: 5
+- item: protein shake (25g whey, water)
+  kcal: 120
+  protein_g: 25
+  carbs_g: 3
+  fat_g: 2
 scheduled_blocks: []
