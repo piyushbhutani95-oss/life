@@ -63,4 +63,10 @@ food:
   protein_g: 25
   carbs_g: 3
   fat_g: 2
+- item: 100g high-protein tofu + 100g cooked rice + 150g cooked dal + 50g aloo sabzi
+  meal: lunch
+  kcal: 520
+  protein_g: 32
+  carbs_g: 63
+  fat_g: 16
 scheduled_blocks: []
