@@ -3,6 +3,9 @@ completions:
 - goal_id: multivitamins
   status: done
   at: '13:54'
+- goal_id: bath
+  status: done
+  at: '13:54'
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
