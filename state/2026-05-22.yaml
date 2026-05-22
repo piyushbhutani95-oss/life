@@ -90,4 +90,9 @@ food:
   protein_g: 7
   carbs_g: 9
   fat_g: 7
+- item: 2 whole eggs + 2 egg whites + 2 slices high protein bread (54g)
+  kcal: 325
+  protein_g: 33
+  carbs_g: 19
+  fat_g: 14
 scheduled_blocks: []
