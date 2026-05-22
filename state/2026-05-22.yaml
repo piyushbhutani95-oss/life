@@ -119,4 +119,10 @@ food:
   protein_g: 33
   carbs_g: 19
   fat_g: 14
+- item: 100g boiled chicken breast + 100g cooked rice
+  meal: dinner
+  kcal: 305
+  protein_g: 34
+  carbs_g: 29
+  fat_g: 4.5
 scheduled_blocks: []
