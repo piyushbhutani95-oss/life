@@ -100,4 +100,10 @@ food:
   protein_g: 54
   carbs_g: 27
   fat_g: 18
+- item: 3 plain dosas + 130g boiled chicken + 75g potatoes
+  meal: dinner
+  kcal: 725
+  protein_g: 51
+  carbs_g: 82
+  fat_g: 21
 scheduled_blocks: []
