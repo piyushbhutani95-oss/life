@@ -61,4 +61,11 @@ food:
   protein_g: 2
   carbs_g: 7
   fat_g: 3
+- item: 2 slices high protein bread (54g) + 1 egg + 50g tofu + 70g boiled chicken
+    + 50g cooked dal
+  meal: lunch
+  kcal: 470
+  protein_g: 54
+  carbs_g: 27
+  fat_g: 18
 scheduled_blocks: []
