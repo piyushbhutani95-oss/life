@@ -83,6 +83,10 @@ notifications_sent:
   nudge_time: '20:30'
   level: soft
   at: '20:30'
+- goal_id: read
+  nudge_time: '21:30'
+  level: soft
+  at: '21:30'
 food:
 - item: 2 whole eggs + 2 egg whites + 2 slices high protein bread (54g)
   meal: breakfast
