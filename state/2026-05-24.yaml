@@ -57,4 +57,19 @@ food:
   protein_g: 33
   carbs_g: 19
   fat_g: 14
+- item: protein shake (25g whey, water)
+  kcal: 120
+  protein_g: 25
+  carbs_g: 3
+  fat_g: 2
+- item: cappuccino (medium, whole milk)
+  kcal: 130
+  protein_g: 7
+  carbs_g: 10
+  fat_g: 7
+- item: cortado (espresso + whole milk)
+  kcal: 45
+  protein_g: 2.5
+  carbs_g: 3
+  fat_g: 2.5
 scheduled_blocks: []
