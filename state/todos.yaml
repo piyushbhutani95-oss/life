@@ -51,3 +51,7 @@ todos:
   text: visa docs
   added_at: 2026-05-24T14:00
   done_at: null
+- id: t-1779630276
+  text: books
+  added_at: 2026-05-24T19:14
+  done_at: null
