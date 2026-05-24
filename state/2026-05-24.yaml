@@ -33,4 +33,11 @@ notifications_sent:
   nudge_time: '10:00'
   level: soft
   at: '10:00'
+food:
+- item: 2 whole eggs + 2 egg whites + 2 slices high protein bread (54g)
+  meal: breakfast
+  kcal: 325
+  protein_g: 33
+  carbs_g: 19
+  fat_g: 14
 scheduled_blocks: []
