@@ -88,6 +88,10 @@ notifications_sent:
   nudge_time: '21:00'
   level: soft
   at: '21:00'
+- goal_id: read
+  nudge_time: '21:30'
+  level: soft
+  at: '21:30'
 food:
 - item: 2 eggs + 3 slices high protein bread + 100g cooked rice + 150g chicken breast
   meal: lunch
