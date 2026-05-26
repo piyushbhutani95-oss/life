@@ -1,8 +1,22 @@
 name: render-and-deploy
 
+# Renders index.html + analytics.html from the live YAML state and
+# publishes to GitHub Pages.
+#
+# Runs on a schedule (not on every push) so the flood of webhook commits
+# — tick every 15 min, plus every food/goal/todo write — doesn't trigger
+# a render-and-deploy per commit. Those all funnel through the single
+# `pages` concurrency lane, where piled-up runs cancel each other and the
+# live page starves. A steady cron keeps the dashboard fresh a few times
+# an hour; use the Run workflow button (workflow_dispatch) for an instant
+# refresh after editing goals/settings.
+#
+# Cron uses non-:00 offsets to dodge GitHub's top-of-hour throttling.
+# Scheduled runs are best-effort on GitHub Actions and may lag under load.
+
 on:
-  push:
-    branches: [main]
+  schedule:
+    - cron: "3,13,23,33,43,53 * * * *"
   workflow_dispatch:
 
 permissions:
