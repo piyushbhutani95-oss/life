@@ -50,4 +50,11 @@ notifications_sent:
   nudge_time: '13:00'
   level: soft
   at: '13:00'
+food:
+- item: 2 eggs + 3 slices high protein bread + 100g cooked rice + 150g chicken breast
+  meal: lunch
+  kcal: 645
+  protein_g: 82
+  carbs_g: 56
+  fat_g: 22
 scheduled_blocks: []
