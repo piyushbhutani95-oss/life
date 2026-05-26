@@ -12,6 +12,9 @@ completions:
 - goal_id: step-out
   status: done
   at: '16:16'
+- goal_id: skincare
+  status: done
+  at: '16:16'
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
