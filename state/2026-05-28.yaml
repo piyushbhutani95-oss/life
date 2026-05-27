@@ -1,0 +1,11 @@
+date: '2026-05-28'
+completions: []
+notifications_sent: []
+scheduled_blocks: []
+food:
+- item: 150g chicken breast + 100g cooked rice
+  meal: lunch
+  kcal: 390
+  protein_g: 50
+  carbs_g: 29
+  fat_g: 6.5
