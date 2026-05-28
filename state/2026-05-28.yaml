@@ -86,6 +86,10 @@ notifications_sent:
   nudge_time: '21:00'
   level: soft
   at: '21:00'
+- goal_id: read
+  nudge_time: '21:30'
+  level: soft
+  at: '21:30'
 scheduled_blocks: []
 food:
 - item: 2.5 eggs + 100g firm tofu + 2 slices Bajo super-foods high-protein bread (54g)
