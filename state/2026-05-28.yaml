@@ -42,6 +42,54 @@ notifications_sent:
   nudge_time: '10:00'
   level: soft
   at: '10:00'
+- goal_id: workout
+  nudge_time: '13:00'
+  level: hard
+  at: '21:45'
+- goal_id: step-out
+  nudge_time: '18:00'
+  level: hard
+  at: '21:45'
+- goal_id: food
+  nudge_time: '13:00'
+  level: hard
+  at: '21:45'
+- goal_id: food
+  nudge_time: '20:00'
+  level: hard
+  at: '21:45'
+- goal_id: write
+  nudge_time: '17:00'
+  level: hard
+  at: '21:45'
+- goal_id: code
+  nudge_time: '18:30'
+  level: hard
+  at: '21:45'
+- goal_id: language
+  nudge_time: '20:30'
+  level: hard
+  at: '21:45'
+- goal_id: read
+  nudge_time: '21:30'
+  level: hard
+  at: '21:45'
+- goal_id: guitar
+  nudge_time: '20:00'
+  level: hard
+  at: '21:45'
+- goal_id: course
+  nudge_time: '19:00'
+  level: hard
+  at: '21:45'
+- goal_id: respond-to-people
+  nudge_time: '15:00'
+  level: hard
+  at: '21:45'
+- goal_id: respond-to-people
+  nudge_time: '21:00'
+  level: hard
+  at: '21:45'
 scheduled_blocks: []
 food:
 - item: 2.5 eggs + 100g firm tofu + 2 slices Bajo super-foods high-protein bread (54g)
@@ -56,7 +104,8 @@ food:
   protein_g: 27
   carbs_g: 72
   fat_g: 12
-- item: 150g boiled chicken breast + 75g cooked rice + 150g cooked dal (light tadka) + bowl of salad
+- item: 150g boiled chicken breast + 75g cooked rice + 150g cooked dal (light tadka)
+    + bowl of salad
   meal: dinner
   kcal: 545
   protein_g: 60
