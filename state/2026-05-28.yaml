@@ -42,18 +42,6 @@ notifications_sent:
   nudge_time: '10:00'
   level: soft
   at: '10:00'
-- goal_id: workout
-  nudge_time: '13:00'
-  level: firm
-  at: '15:00'
-- goal_id: food
-  nudge_time: '13:00'
-  level: firm
-  at: '15:00'
-- goal_id: respond-to-people
-  nudge_time: '15:00'
-  level: firm
-  at: '15:00'
 scheduled_blocks: []
 food:
 - item: 2.5 eggs + 100g firm tofu + 2 slices Bajo super-foods high-protein bread (54g)
@@ -62,9 +50,9 @@ food:
   protein_g: 45
   carbs_g: 22
   fat_g: 24.5
-- item: 100g cooked rice + 250g cooked dal + 200g curd
+- item: 100g cooked rice + 250g cooked dal (light tadka) + 200g curd
   meal: lunch
-  kcal: 605
-  protein_g: 29
-  carbs_g: 77
-  fat_g: 21
+  kcal: 505
+  protein_g: 27
+  carbs_g: 72
+  fat_g: 12
