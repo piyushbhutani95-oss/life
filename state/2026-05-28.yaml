@@ -1,6 +1,14 @@
 date: '2026-05-28'
 completions: []
-notifications_sent: []
+notifications_sent:
+- goal_id: wake-early
+  nudge_time: 06:00
+  level: soft
+  at: 06:00
+- goal_id: meditate
+  nudge_time: 06:00
+  level: soft
+  at: 06:00
 scheduled_blocks: []
 food:
 - item: 150g chicken breast + 100g cooked rice
