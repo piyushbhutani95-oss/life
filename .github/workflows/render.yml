@@ -3,13 +3,18 @@ name: render-and-deploy
 # Renders index.html + analytics.html from the live YAML state and
 # publishes to GitHub Pages.
 #
-# Runs on a schedule (not on every push) so the flood of webhook commits
-# — tick every 15 min, plus every food/goal/todo write — doesn't trigger
-# a render-and-deploy per commit. Those all funnel through the single
-# `pages` concurrency lane, where piled-up runs cancel each other and the
-# live page starves. A steady cron keeps the dashboard fresh a few times
-# an hour; use the Run workflow button (workflow_dispatch) for an instant
-# refresh after editing goals/settings.
+# The dashboard is now live-rendered on every page load by /api/render
+# (Vercel function in api/index.py), so the static HTML on Pages is only
+# a fallback for when JS is off / the API is unreachable / search engines
+# crawl. That changes how often we need to rebuild:
+#
+#   - Cron every 10 min: keeps the fallback "fresh enough" without the
+#     per-commit pile-up. State commits no longer trigger rebuilds.
+#   - Path-filtered push: instant rebuild when the structure changes
+#     (new goal, render code, styles, settings). These deserve an immediate
+#     fallback refresh because the live render also reflects them, and we
+#     want the static fallback to match what's served live.
+#   - workflow_dispatch: manual button for any other reason.
 #
 # Cron uses non-:00 offsets to dodge GitHub's top-of-hour throttling.
 # Scheduled runs are best-effort on GitHub Actions and may lag under load.
@@ -17,6 +22,15 @@ name: render-and-deploy
 on:
   schedule:
     - cron: "3,13,23,33,43,53 * * * *"
+  push:
+    branches: [main]
+    paths:
+      - "goals.yaml"
+      - "settings.yaml"
+      - "settings.example.yaml"
+      - "style.css"
+      - "render.py"
+      - ".github/workflows/render.yml"
   workflow_dispatch:
 
 permissions:

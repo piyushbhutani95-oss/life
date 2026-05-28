@@ -693,35 +693,53 @@ def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, di
     webhook_cfg = settings.get("webhook", {}) or {}
     webhook_url = os.environ.get("WEBHOOK_URL") or webhook_cfg.get("url", "")
     webhook_secret = os.environ.get("SHARED_SECRET") or webhook_cfg.get("shared_secret", "")
-    # /api/todo lives on the same Vercel deployment as /api/mark
+    # /api/todo + /api/render live on the same Vercel deployment as /api/mark
     todo_url = webhook_url.replace("/api/mark", "/api/todo") if webhook_url else ""
+    render_url = webhook_url.replace("/api/mark", "/api/render") if webhook_url else ""
     webhook_url_js = json.dumps(webhook_url)
     webhook_secret_js = json.dumps(webhook_secret)
     todo_url_js = json.dumps(todo_url)
+    render_url_js = json.dumps(render_url)
 
     todo_panel_html = render_todo_panel(todos or [])
 
     script = """
 (function(){
+  // -----------------------------------------------------------------------
+  // Live-rendered dashboard. The static HTML on GitHub Pages is the first
+  // paint; everything past that is hydrated from /api/render on Vercel.
+  //
+  // Two design choices that matter:
+  //   1. Event delegation everywhere. The DOM gets replaced on every refresh,
+  //      so listeners bound to specific elements would die. One document-level
+  //      listener per event type survives any number of DOM swaps.
+  //   2. Optimistic UI on click → API call → refresh from /api/render. The
+  //      optimistic flip gives instant feedback; the refresh is the ground
+  //      truth that arrives ~500ms later.
+  // -----------------------------------------------------------------------
+
   var body = document.body;
-  function setTheme(t){
+  var webhook    = window.LIFE_WEBHOOK_URL || '';
+  var secret     = window.LIFE_SECRET || '';
+  var todoUrl    = window.LIFE_TODO_URL || '';
+  var renderUrl  = window.LIFE_RENDER_URL || '';
+
+  // ─── theme + filter (persisted client-side, re-applied after swaps) ───
+  function applyTheme(){
+    var t = 'light';
+    try { t = localStorage.getItem('life.theme') || 'light'; } catch(e){}
     body.dataset.theme = t;
-    try { localStorage.setItem('life.theme', t); } catch(e){}
     document.querySelectorAll('[data-action=theme]').forEach(function(b){ b.textContent = t; });
   }
-  var savedTheme = 'light';
-  try { savedTheme = localStorage.getItem('life.theme') || 'light'; } catch(e){}
-  setTheme(savedTheme);
-  document.querySelectorAll('[data-action=theme]').forEach(function(b){
-    b.addEventListener('click', function(e){
-      e.stopPropagation();
-      setTheme(body.dataset.theme === 'light' ? 'dark' : 'light');
-    });
-  });
+  function setTheme(t){
+    try { localStorage.setItem('life.theme', t); } catch(e){}
+    applyTheme();
+  }
 
-  function setFilter(f){
+  function applyFilter(){
+    var f = 'all';
+    try { f = localStorage.getItem('life.filter') || 'all'; } catch(e){}
     body.dataset.filter = f;
-    try { localStorage.setItem('life.filter', f); } catch(e){}
     document.querySelectorAll('.pill').forEach(function(p){
       p.classList.toggle('is-active', p.dataset.filter === f);
     });
@@ -732,19 +750,67 @@ def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, di
       s.hidden = s.querySelectorAll('.goal:not([hidden])').length === 0;
     });
   }
-  var savedFilter = 'all';
-  try { savedFilter = localStorage.getItem('life.filter') || 'all'; } catch(e){}
-  setFilter(savedFilter);
-  document.querySelectorAll('.pill').forEach(function(p){
-    p.addEventListener('click', function(e){
-      e.stopPropagation();
-      setFilter(p.dataset.filter);
-    });
-  });
+  function setFilter(f){
+    try { localStorage.setItem('life.filter', f); } catch(e){}
+    applyFilter();
+  }
 
-  // tap-to-mark
-  var webhook = window.LIFE_WEBHOOK_URL || '';
-  var secret  = window.LIFE_SECRET || '';
+  function applyTodosOpen(){
+    var open = '0';
+    try { open = localStorage.getItem('life.todos.open') || '0'; } catch(e){}
+    var panel = document.querySelector('.todos');
+    if (panel) panel.dataset.todosOpen = (open === '1') ? 'true' : 'false';
+  }
+  function setTodosOpen(open){
+    try { localStorage.setItem('life.todos.open', open ? '1' : '0'); } catch(e){}
+    applyTodosOpen();
+  }
+
+  applyTheme();
+  applyFilter();
+  applyTodosOpen();
+
+  // ─── live refresh from /api/render ────────────────────────────────────
+  var refreshPending = null;
+  function refreshDashboard(){
+    if (!renderUrl || !secret) return Promise.resolve();
+    // Debounce: if a refresh is already in-flight, return the same promise.
+    if (refreshPending) return refreshPending;
+    refreshPending = fetch(renderUrl, {
+      method: 'GET',
+      headers: { 'X-Secret': secret },
+      cache: 'no-store'
+    }).then(function(r){
+      if (!r.ok) throw new Error('render ' + r.status);
+      return r.text();
+    }).then(function(html){
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      var newPaper = doc.querySelector('.paper');
+      var oldPaper = document.querySelector('.paper');
+      if (newPaper && oldPaper) oldPaper.replaceWith(newPaper);
+      var newTodos = doc.querySelector('.todos');
+      var oldTodos = document.querySelector('.todos');
+      if (newTodos && oldTodos) oldTodos.replaceWith(newTodos);
+      // The replaced markup has the server's default class state; re-apply
+      // theme / filter / drawer-open from localStorage so client preferences
+      // survive the swap.
+      applyTheme();
+      applyFilter();
+      applyTodosOpen();
+    }).catch(function(err){
+      console.warn('refresh failed', err);
+    }).finally(function(){
+      refreshPending = null;
+    });
+    return refreshPending;
+  }
+
+  // Trigger an immediate refresh on first load so the user sees current
+  // state even if the static HTML on Pages is stale. Slight defer so the
+  // first paint isn't blocked by the API round-trip.
+  setTimeout(refreshDashboard, 50);
+
+  // ─── tap-to-mark a goal ───────────────────────────────────────────────
   function markDone(card){
     var goalId = card.dataset.id;
     if (!goalId || goalId === 'food') return;
@@ -753,68 +819,31 @@ def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, di
     if (card.classList.contains('is-marking')) return;
     if (!webhook || !secret){ console.warn('webhook not configured', goalId); return; }
     card.classList.add('is-marking');
+    // Optimistic flip — feels instant.
+    card.classList.remove('goal--open');
+    card.classList.add('goal--done');
     fetch(webhook + '?goal=' + encodeURIComponent(goalId) + '&status=done', {
       method: 'GET', headers: { 'X-Secret': secret }
     }).then(function(r){
-      if (!r.ok){ return r.text().then(function(t){ throw new Error(r.status + ' ' + t); }); }
-      card.classList.remove('goal--open');
-      card.classList.add('goal--done');
+      if (!r.ok) return r.text().then(function(t){ throw new Error(r.status + ' ' + t); });
+      // Ground truth: pull a fresh render so streaks, history strips, and
+      // the progress bar reflect the new completion.
+      return refreshDashboard();
     }).catch(function(err){
       console.error('mark failed', goalId, err);
-      card.classList.add('goal--mark-error');
+      // Roll the optimistic flip back.
+      card.classList.remove('goal--done');
+      card.classList.add('goal--open', 'goal--mark-error');
       setTimeout(function(){ card.classList.remove('goal--mark-error'); }, 2000);
     }).finally(function(){
       card.classList.remove('is-marking');
     });
   }
-  document.querySelectorAll('.goal[data-id]').forEach(function(card){
-    if (card.dataset.id === 'food') return;
-    card.addEventListener('click', function(){ markDone(card); });
-  });
 
-  // ── to-do side panel ──────────────────────────────────────
-  var todoPanel = document.querySelector('.todos');
-  if (!todoPanel) return;
-  var todoUrl    = window.LIFE_TODO_URL || '';
-  var todoSecret = window.LIFE_SECRET || '';
-
-  function setTodosOpen(open){
-    todoPanel.dataset.todosOpen = open ? 'true' : 'false';
-    try { localStorage.setItem('life.todos.open', open ? '1' : '0'); } catch(e){}
-  }
-  var savedTodos = '0';
-  try { savedTodos = localStorage.getItem('life.todos.open') || '0'; } catch(e){}
-  setTodosOpen(savedTodos === '1');
-  document.querySelectorAll('[data-action=todos-toggle]').forEach(function(b){
-    b.addEventListener('click', function(e){
-      e.stopPropagation();
-      setTodosOpen(todoPanel.dataset.todosOpen !== 'true');
-    });
-  });
-  document.addEventListener('keydown', function(e){
-    if (e.key === 'Escape' && todoPanel.dataset.todosOpen === 'true'){
-      setTodosOpen(false);
-    }
-  });
-
-  function refreshTodoCount(){
-    var openCount = todoPanel.querySelectorAll('.todos__list--open .todo--open').length;
-    var badge = todoPanel.querySelector('.todos__handle-count');
-    if (openCount > 0){
-      if (!badge){
-        badge = document.createElement('span');
-        badge.className = 'todos__handle-count';
-        todoPanel.querySelector('.todos__handle').appendChild(badge);
-      }
-      badge.textContent = openCount;
-    } else if (badge){
-      badge.remove();
-    }
-  }
-
+  // ─── to-do panel actions ──────────────────────────────────────────────
   function todoFetch(qs){
     return fetch(todoUrl + '?' + qs, {
-      method: 'GET', headers: { 'X-Secret': todoSecret }
+      method: 'GET', headers: { 'X-Secret': secret }
     }).then(function(r){
       if (!r.ok) return r.text().then(function(t){ throw new Error(r.status + ' ' + t); });
       return r.text().then(function(t){
@@ -827,76 +856,99 @@ def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, di
     if (!li || li.classList.contains('is-busy')) return;
     var id = li.dataset.id;
     if (!id) return;
-    if (!todoUrl || !todoSecret){ console.warn('todo api not configured'); return; }
+    if (!todoUrl || !secret){ console.warn('todo api not configured'); return; }
     var isDone = li.classList.contains('todo--done');
     var action = isDone ? 'uncheck' : 'check';
     li.classList.add('is-busy');
-    // Optimistic flip
     li.classList.toggle('todo--done');
     li.classList.toggle('todo--open');
-    refreshTodoCount();
     todoFetch('action=' + action + '&id=' + encodeURIComponent(id))
+      .then(function(){ return refreshDashboard(); })
       .catch(function(err){
         console.error('todo toggle failed', err);
         li.classList.toggle('todo--done');
         li.classList.toggle('todo--open');
         li.classList.add('todo--error');
         setTimeout(function(){ li.classList.remove('todo--error'); }, 2000);
-        refreshTodoCount();
       })
       .finally(function(){ li.classList.remove('is-busy'); });
   }
 
-  function bindCheck(li){
-    var btn = li.querySelector('.todo__check');
-    if (!btn) return;
-    btn.addEventListener('click', function(e){
-      e.stopPropagation();
-      toggleTodo(li);
-    });
+  function addTodo(form){
+    var input = form.querySelector('input');
+    var text = (input.value || '').trim();
+    if (!text) return;
+    if (!todoUrl || !secret){ console.warn('todo api not configured'); return; }
+    input.disabled = true;
+    todoFetch('action=add&text=' + encodeURIComponent(text))
+      .then(function(){
+        input.value = '';
+        return refreshDashboard();
+      })
+      .catch(function(err){
+        console.error('todo add failed', err);
+        input.classList.add('todos__input--error');
+        setTimeout(function(){ input.classList.remove('todos__input--error'); }, 1500);
+      })
+      .finally(function(){
+        input.disabled = false;
+        input.focus();
+      });
   }
-  todoPanel.querySelectorAll('.todo[data-id]').forEach(bindCheck);
 
-  var addForm = todoPanel.querySelector('[data-form=todo-add]');
-  if (addForm){
-    addForm.addEventListener('submit', function(e){
+  // ─── delegated event listeners (survive DOM swaps) ────────────────────
+  document.addEventListener('click', function(e){
+    // Theme toggle
+    if (e.target.closest('[data-action=theme]')){
+      e.stopPropagation();
+      setTheme(body.dataset.theme === 'light' ? 'dark' : 'light');
+      return;
+    }
+    // Category filter pill
+    var pill = e.target.closest('.pill');
+    if (pill){
+      e.stopPropagation();
+      setFilter(pill.dataset.filter);
+      return;
+    }
+    // To-do drawer open/close
+    if (e.target.closest('[data-action=todos-toggle]')){
+      e.stopPropagation();
+      var panel = document.querySelector('.todos');
+      setTodosOpen(panel && panel.dataset.todosOpen !== 'true');
+      return;
+    }
+    // To-do checkbox (must run before goal-card handler, since both could
+    // technically match nested layouts).
+    var checkBtn = e.target.closest('.todo__check');
+    if (checkBtn){
+      e.stopPropagation();
+      var li = checkBtn.closest('.todo[data-id]');
+      if (li) toggleTodo(li);
+      return;
+    }
+    // Tap-to-mark a goal card
+    var card = e.target.closest('.goal[data-id]');
+    if (card){
+      markDone(card);
+      return;
+    }
+  });
+
+  document.addEventListener('submit', function(e){
+    var form = e.target.closest('[data-form=todo-add]');
+    if (form){
       e.preventDefault();
-      var input = addForm.querySelector('input');
-      var text = (input.value || '').trim();
-      if (!text) return;
-      if (!todoUrl || !todoSecret){ console.warn('todo api not configured'); return; }
-      input.disabled = true;
-      todoFetch('action=add&text=' + encodeURIComponent(text))
-        .then(function(r){
-          var newId = (r && r.id) || ('t-' + Date.now());
-          // Drop any empty placeholder
-          var ul = todoPanel.querySelector('.todos__list--open');
-          var empty = ul.querySelector('.todo--empty');
-          if (empty) empty.remove();
-          // Prepend the new item
-          var li = document.createElement('li');
-          li.className = 'todo todo--open';
-          li.dataset.id = newId;
-          li.innerHTML = '<button class="todo__check" type="button" aria-label="toggle done">' +
-                         '<span class="todo__check-mark" aria-hidden="true"></span></button>' +
-                         '<span class="todo__text"></span>';
-          li.querySelector('.todo__text').textContent = text;
-          bindCheck(li);
-          ul.appendChild(li);
-          input.value = '';
-          refreshTodoCount();
-        })
-        .catch(function(err){
-          console.error('todo add failed', err);
-          input.classList.add('todos__input--error');
-          setTimeout(function(){ input.classList.remove('todos__input--error'); }, 1500);
-        })
-        .finally(function(){
-          input.disabled = false;
-          input.focus();
-        });
-    });
-  }
+      addTodo(form);
+    }
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape'){
+      var panel = document.querySelector('.todos');
+      if (panel && panel.dataset.todosOpen === 'true') setTodosOpen(false);
+    }
+  });
 })();
 """
 
@@ -910,7 +962,7 @@ def render_html(*, settings: dict, goals_data: dict, recent_states: dict[str, di
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
-<script>window.LIFE_WEBHOOK_URL = {webhook_url_js}; window.LIFE_SECRET = {webhook_secret_js}; window.LIFE_TODO_URL = {todo_url_js};</script>
+<script>window.LIFE_WEBHOOK_URL = {webhook_url_js}; window.LIFE_SECRET = {webhook_secret_js}; window.LIFE_TODO_URL = {todo_url_js}; window.LIFE_RENDER_URL = {render_url_js};</script>
 </head>
 <body data-theme="light" data-filter="all">
   <div class="paper">

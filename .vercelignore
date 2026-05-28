@@ -1,16 +1,21 @@
-# Tell Vercel to deploy ONLY the webhook function (api/mark.py + deps).
-# Everything else lives elsewhere:
-#   - the dashboard (index.html + style.css) is on GitHub Pages
-#   - render.py + tick.py run on GitHub Actions, not Vercel
-#   - data files (goals.yaml, state/, etc.) are read at runtime via the
-#     GitHub Contents API, not bundled into the Vercel deploy
+# Tell Vercel what NOT to bundle. The Vercel deploy now serves:
+#   • /api/mark, /api/todo  — webhook handlers (existing)
+#   • /api/tick             — cron-driven nudger (existing)
+#   • /api/render           — live dashboard render (NEW)
+#
+# render.py IS bundled now (imported by /api/render). Everything else still
+# lives elsewhere:
+#   - the dashboard's static index.html lives on GitHub Pages (fallback only)
+#   - tick.py runs on GitHub Actions, not Vercel
+#   - data files (goals.yaml, settings.yaml, state/, etc.) are read at runtime
+#     via the GitHub Contents API, not bundled into the Vercel deploy
 
-render.py
 tick.py
 goals.yaml
 settings.example.yaml
 state/
 index.html
+analytics.html
 style.css
 *.md
 *.zip

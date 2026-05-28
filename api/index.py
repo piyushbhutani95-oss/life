@@ -41,17 +41,28 @@ Env vars (Vercel project settings):
 from __future__ import annotations
 
 import base64
+import concurrent.futures
 import json
 import os
+import sys
 import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, time, timedelta
 from http.server import BaseHTTPRequestHandler
+from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 from zoneinfo import ZoneInfo
 
 import yaml
+
+# render.py lives one level up from api/. Make it importable so /api/render
+# can reuse the exact same rendering code that GitHub Actions uses to build
+# the static index.html at deploy time. Keeps one source of truth.
+_ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(_ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(_ROOT_DIR))
+import render  # noqa: E402
 
 GITHUB_API = "https://api.github.com"
 
@@ -423,6 +434,76 @@ CORS_HEADERS = {
 }
 
 
+# ---------- live dashboard render (used by /api/render) ----------
+
+# 7 days of state matches render.HISTORY_DAYS — the dashboard's history strip.
+_RENDER_HISTORY_DAYS = 7
+
+
+def _fetch_yaml_file(path: str) -> dict:
+    """Fetch + parse a YAML file from the repo. Returns {} on 404 or empty."""
+    try:
+        content, _ = get_file(path)
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return {}
+        raise
+    if not content or not content.strip():
+        return {}
+    data = yaml.safe_load(content)
+    if data is None:
+        return {}
+    return data if isinstance(data, dict) else {"_raw": data}
+
+
+def _gather_dashboard_data() -> tuple[dict, dict, dict, list, datetime, datetime]:
+    """Parallel-fetch every file the dashboard render needs.
+
+    Returns (settings, goals_data, recent_states, todos, today, now).
+    Each state file is fetched concurrently to keep p50 latency under ~500ms
+    even with ~10 GitHub Contents API calls.
+    """
+    tz = ZoneInfo(TZ_NAME)
+    now = datetime.now(tz)
+    today_dt = now - timedelta(days=1) if now.hour < ROLLOVER else now
+
+    # Build the list of state dates the dashboard's history strip needs.
+    state_dates: list[str] = []
+    for i in range(_RENDER_HISTORY_DAYS - 1, -1, -1):
+        d = (today_dt - timedelta(days=i)).strftime("%Y-%m-%d")
+        state_dates.append(d)
+
+    paths: dict[str, str] = {
+        "goals":    "goals.yaml",
+        "settings": "settings.yaml",
+        "todos":    "state/todos.yaml",
+    }
+    for d in state_dates:
+        paths[f"state_{d}"] = f"state/{d}.yaml"
+
+    results: dict[str, dict] = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=12) as pool:
+        fut_to_key = {pool.submit(_fetch_yaml_file, p): k for k, p in paths.items()}
+        for fut in concurrent.futures.as_completed(fut_to_key):
+            results[fut_to_key[fut]] = fut.result()
+
+    goals_data = results.get("goals") or {}
+    settings = results.get("settings") or {}
+    todos_data = results.get("todos") or {}
+    todos = (todos_data.get("todos") if isinstance(todos_data, dict) else []) or []
+
+    recent_states: dict[str, dict] = {}
+    for d in state_dates:
+        recent_states[d] = results.get(f"state_{d}") or {
+            "date": d,
+            "completions": [],
+            "notifications_sent": [],
+            "scheduled_blocks": [],
+        }
+
+    return settings, goals_data, recent_states, todos, today_dt, now
+
+
 class handler(BaseHTTPRequestHandler):
     def _send_cors(self) -> None:
         for k, v in CORS_HEADERS.items():
@@ -537,6 +618,44 @@ class handler(BaseHTTPRequestHandler):
         except Exception as e:
             self._respond(500, f"error: {type(e).__name__}: {e}")
 
+    # ---- /api/render ----
+    #
+    # Live-rendered dashboard. Called by the dashboard's JS on page load and
+    # after every successful mark/todo mutation. Reads goals.yaml, settings.yaml,
+    # todos.yaml, and the last HISTORY_DAYS state files in parallel from the
+    # GitHub Contents API, then runs the exact same render code that GH Actions
+    # uses for the static deploy. Net effect: refreshes show fresh state with no
+    # GH Pages rebuild lag.
+
+    def _handle_render(self) -> None:
+        params = self._params()
+        if not SHARED_SECRET or self._shared_secret(params) != SHARED_SECRET:
+            self._respond(403, "forbidden")
+            return
+        try:
+            (settings, goals_data, recent_states,
+             todos, today, now) = _gather_dashboard_data()
+            html_str = render.render_html(
+                settings=settings,
+                goals_data=goals_data,
+                recent_states=recent_states,
+                today=today,
+                now=now,
+                todos=todos,
+            )
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Cache-Control", "no-store, max-age=0")
+            self._send_cors()
+            self.end_headers()
+            self.wfile.write(html_str.encode())
+        except urllib.error.HTTPError as e:
+            self._respond(502, f"github error {e.code}: {e.read().decode()[:200]}")
+        except Exception as e:
+            import traceback
+            self._respond(500, f"error: {type(e).__name__}: {e}\n"
+                               f"{traceback.format_exc()[:500]}")
+
     # ---- routing ----
 
     def _route(self) -> None:
@@ -545,6 +664,8 @@ class handler(BaseHTTPRequestHandler):
             self._handle_tick()
         elif "todo" in path:
             self._handle_todo()
+        elif "render" in path:
+            self._handle_render()
         else:
             self._handle_mark()
 
