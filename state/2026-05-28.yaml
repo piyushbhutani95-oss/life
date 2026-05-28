@@ -9,9 +9,6 @@ completions:
 - goal_id: skincare
   status: done
   at: '12:41'
-- goal_id: workout
-  status: done
-  at: '13:15'
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
@@ -45,31 +42,11 @@ notifications_sent:
   nudge_time: '10:00'
   level: soft
   at: '10:00'
-- goal_id: workout
-  nudge_time: '13:00'
-  level: soft
-  at: '13:15'
-- goal_id: food
-  nudge_time: '13:00'
-  level: soft
-  at: '13:15'
 scheduled_blocks: []
 food:
-- item: 2.5 eggs
+- item: 2.5 eggs + 100g firm tofu + 2 slices Bajo super-foods high-protein bread (54g)
   meal: breakfast
-  kcal: 180
-  protein_g: 15
-  carbs_g: 1
-  fat_g: 12.5
-- item: 100g tofu (firm)
-  meal: breakfast
-  kcal: 144
-  protein_g: 17
-  carbs_g: 3
-  fat_g: 9
-- item: 2 slices high-protein bread
-  meal: breakfast
-  kcal: 180
-  protein_g: 18
-  carbs_g: 10
-  fat_g: 4
+  kcal: 458
+  protein_g: 45
+  carbs_g: 22
+  fat_g: 24.5
