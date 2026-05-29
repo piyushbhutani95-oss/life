@@ -42,3 +42,16 @@ notifications_sent:
   level: soft
   at: '13:00'
 scheduled_blocks: []
+food:
+- item: 2 cups of chai (milk, light sugar)
+  meal: breakfast
+  kcal: 140
+  protein_g: 4
+  carbs_g: 16
+  fat_g: 6
+- item: 3 eggs + 2 slices Bajo super-foods high-protein bread (54g)
+  meal: breakfast
+  kcal: 350
+  protein_g: 31
+  carbs_g: 19
+  fat_g: 18
