@@ -41,26 +41,6 @@ notifications_sent:
   nudge_time: '13:00'
   level: soft
   at: '13:00'
-- goal_id: respond-to-people
-  nudge_time: '15:00'
-  level: soft
-  at: '15:00'
-- goal_id: write
-  nudge_time: '17:00'
-  level: soft
-  at: '17:00'
-- goal_id: step-out
-  nudge_time: '18:00'
-  level: soft
-  at: '18:00'
-- goal_id: code
-  nudge_time: '18:30'
-  level: soft
-  at: '18:30'
-- goal_id: course
-  nudge_time: '19:00'
-  level: soft
-  at: '19:00'
 scheduled_blocks: []
 food:
 - item: 2 cups of chai (milk, light sugar)
@@ -75,3 +55,9 @@ food:
   protein_g: 31
   carbs_g: 19
   fat_g: 18
+- item: 50g boiled chicken breast + 1 slice Bajo super-foods high-protein bread (27g)
+  meal: snack
+  kcal: 155
+  protein_g: 22
+  carbs_g: 10
+  fat_g: 3.5
