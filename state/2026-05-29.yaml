@@ -41,46 +41,6 @@ notifications_sent:
   nudge_time: '13:00'
   level: soft
   at: '13:00'
-- goal_id: step-out
-  nudge_time: '18:00'
-  level: hard
-  at: '20:00'
-- goal_id: food
-  nudge_time: '20:00'
-  level: hard
-  at: '20:00'
-- goal_id: write
-  nudge_time: '17:00'
-  level: hard
-  at: '20:00'
-- goal_id: code
-  nudge_time: '18:30'
-  level: hard
-  at: '20:00'
-- goal_id: guitar
-  nudge_time: '20:00'
-  level: hard
-  at: '20:00'
-- goal_id: course
-  nudge_time: '19:00'
-  level: hard
-  at: '20:00'
-- goal_id: respond-to-people
-  nudge_time: '15:00'
-  level: hard
-  at: '20:00'
-- goal_id: language
-  nudge_time: '20:30'
-  level: soft
-  at: '20:30'
-- goal_id: respond-to-people
-  nudge_time: '21:00'
-  level: soft
-  at: '21:00'
-- goal_id: read
-  nudge_time: '21:30'
-  level: soft
-  at: '21:30'
 scheduled_blocks: []
 food:
 - item: 2 cups of chai (milk, light sugar)
@@ -107,3 +67,11 @@ food:
   protein_g: 25
   carbs_g: 3
   fat_g: 2
+- item: 2 plates tofu + mixed veg (broccoli, pepper, mushroom, onion, corn, carrot)
+    stir-fry over rice noodles (estimated ~350g tofu, ~300g noodles, ~300g veg, soy-based
+    sauce, stir-fry oil)
+  meal: dinner
+  kcal: 1150
+  protein_g: 80
+  carbs_g: 126
+  fat_g: 44
