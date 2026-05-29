@@ -68,10 +68,10 @@ food:
   carbs_g: 3
   fat_g: 2
 - item: 2 plates tofu + mixed veg (broccoli, pepper, mushroom, onion, corn, carrot)
-    stir-fry over rice noodles (estimated ~350g tofu, ~300g noodles, ~300g veg, soy-based
-    sauce, stir-fry oil)
+    stir-fry over shirataki (konjac) noodles with soy + peanut butter sauce (~350g
+    tofu, ~300g shirataki, ~300g veg, ~25g peanut butter)
   meal: dinner
-  kcal: 1150
-  protein_g: 80
-  carbs_g: 126
-  fat_g: 44
+  kcal: 1030
+  protein_g: 76
+  carbs_g: 65
+  fat_g: 58
