@@ -61,3 +61,9 @@ food:
   protein_g: 22
   carbs_g: 10
   fat_g: 3.5
+- item: protein shake (25g whey, water)
+  meal: snack
+  kcal: 120
+  protein_g: 25
+  carbs_g: 3
+  fat_g: 2
