@@ -69,6 +69,10 @@ notifications_sent:
   nudge_time: '15:00'
   level: hard
   at: '20:00'
+- goal_id: language
+  nudge_time: '20:30'
+  level: soft
+  at: '20:30'
 scheduled_blocks: []
 food:
 - item: 2 cups of chai (milk, light sugar)
