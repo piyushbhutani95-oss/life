@@ -44,9 +44,14 @@ notifications_sent:
   nudge_time: '13:00'
   level: soft
   at: '13:00'
+- goal_id: respond-to-people
+  nudge_time: '15:00'
+  level: soft
+  at: '15:00'
 scheduled_blocks: []
 food:
-- item: 2 whole eggs + 2 egg whites + 2 slices Bajo super-foods high-protein bread (54g)
+- item: 2 whole eggs + 2 egg whites + 2 slices Bajo super-foods high-protein bread
+    (54g)
   meal: breakfast
   kcal: 325
   protein_g: 33
