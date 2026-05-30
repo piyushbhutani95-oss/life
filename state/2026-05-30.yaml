@@ -58,3 +58,9 @@ food:
   protein_g: 1
   carbs_g: 7
   fat_g: 0
+- item: 100g cooked rice + 200g ghiya sabzi + 200g tofu
+  meal: lunch
+  kcal: 518
+  protein_g: 39
+  carbs_g: 46
+  fat_g: 23
