@@ -44,9 +44,42 @@ notifications_sent:
   nudge_time: '13:00'
   level: soft
   at: '13:00'
+- goal_id: food
+  nudge_time: '20:00'
+  level: hard
+  at: '21:15'
+- goal_id: write
+  nudge_time: '17:00'
+  level: hard
+  at: '21:15'
+- goal_id: code
+  nudge_time: '18:30'
+  level: hard
+  at: '21:15'
+- goal_id: language
+  nudge_time: '20:30'
+  level: hard
+  at: '21:15'
+- goal_id: guitar
+  nudge_time: '20:00'
+  level: hard
+  at: '21:15'
+- goal_id: course
+  nudge_time: '19:00'
+  level: hard
+  at: '21:15'
+- goal_id: respond-to-people
+  nudge_time: '15:00'
+  level: hard
+  at: '21:15'
+- goal_id: respond-to-people
+  nudge_time: '21:00'
+  level: hard
+  at: '21:15'
 scheduled_blocks: []
 food:
-- item: 2 whole eggs + 2 egg whites + 2 slices Bajo super-foods high-protein bread (54g)
+- item: 2 whole eggs + 2 egg whites + 2 slices Bajo super-foods high-protein bread
+    (54g)
   meal: breakfast
   kcal: 325
   protein_g: 33
