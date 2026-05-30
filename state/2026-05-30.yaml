@@ -52,3 +52,9 @@ food:
   protein_g: 33
   carbs_g: 19
   fat_g: 14
+- item: bowl of cucumber (~200g)
+  meal: snack
+  kcal: 30
+  protein_g: 1
+  carbs_g: 7
+  fat_g: 0
