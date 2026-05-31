@@ -3,15 +3,6 @@ completions:
 - goal_id: multivitamins
   status: done
   at: 09:29
-- goal_id: skincare
-  status: done
-  at: '14:53'
-- goal_id: bath
-  status: done
-  at: '14:53'
-- goal_id: guitar
-  status: done
-  at: '14:53'
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
@@ -45,30 +36,6 @@ notifications_sent:
   nudge_time: '10:00'
   level: soft
   at: '10:00'
-- goal_id: workout
-  nudge_time: '13:00'
-  level: soft
-  at: '14:00'
-- goal_id: food
-  nudge_time: '13:00'
-  level: soft
-  at: '14:00'
-- goal_id: respond-to-people
-  nudge_time: '15:00'
-  level: soft
-  at: '15:00'
-- goal_id: write
-  nudge_time: '17:00'
-  level: soft
-  at: '17:00'
-- goal_id: step-out
-  nudge_time: '18:00'
-  level: soft
-  at: '18:00'
-- goal_id: code
-  nudge_time: '18:30'
-  level: soft
-  at: '18:30'
 scheduled_blocks: []
 food:
 - item: 3 whole eggs + 2 slices Bajo super-foods high-protein bread (54g) + 200g palak
@@ -84,3 +51,9 @@ food:
   protein_g: 67
   carbs_g: 64
   fat_g: 15
+- item: RiteBite Max Protein bar (67g) [label values]
+  meal: snack
+  kcal: 267
+  protein_g: 20
+  carbs_g: 15
+  fat_g: 11
