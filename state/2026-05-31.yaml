@@ -41,16 +41,16 @@ food:
 - item: 3 whole eggs + 2 slices Bajo super-foods high-protein bread (54g) + 200g palak
     dal
   meal: breakfast
-  kcal: 570
-  protein_g: 45
-  carbs_g: 46
-  fat_g: 25
+  kcal: 530
+  protein_g: 41
+  carbs_g: 41
+  fat_g: 24
 - item: 150g boiled chicken breast + 100g cooked rice + 250g palak dal
   meal: lunch
-  kcal: 668
-  protein_g: 67
-  carbs_g: 64
-  fat_g: 15
+  kcal: 618
+  protein_g: 63
+  carbs_g: 58
+  fat_g: 14
 - item: RiteBite Max Protein bar (67g) [label values]
   meal: snack
   kcal: 267
