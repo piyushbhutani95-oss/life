@@ -36,14 +36,6 @@ notifications_sent:
   nudge_time: '10:00'
   level: soft
   at: '10:00'
-- goal_id: workout
-  nudge_time: '13:00'
-  level: soft
-  at: '13:00'
-- goal_id: food
-  nudge_time: '13:00'
-  level: soft
-  at: '13:00'
 scheduled_blocks: []
 food:
 - item: 3 whole eggs + 2 slices Bajo super-foods high-protein bread (54g) + 200g palak
@@ -53,3 +45,9 @@ food:
   protein_g: 45
   carbs_g: 46
   fat_g: 25
+- item: 150g boiled chicken breast + 100g cooked rice + 250g palak dal
+  meal: lunch
+  kcal: 668
+  protein_g: 67
+  carbs_g: 64
+  fat_g: 15
