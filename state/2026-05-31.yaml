@@ -80,6 +80,10 @@ notifications_sent:
   nudge_time: '21:00'
   level: hard
   at: '21:15'
+- goal_id: read
+  nudge_time: '21:30'
+  level: soft
+  at: '21:30'
 scheduled_blocks: []
 food:
 - item: 3 whole eggs + 2 slices Bajo super-foods high-protein bread (54g) + 200g palak
