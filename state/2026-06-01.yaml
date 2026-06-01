@@ -46,3 +46,22 @@ notifications_sent:
   level: soft
   at: '15:00'
 scheduled_blocks: []
+food:
+- item: 3 whole eggs + 2 slices Bajo super-foods high-protein bread (54g)
+  meal: breakfast
+  kcal: 350
+  protein_g: 31
+  carbs_g: 19
+  fat_g: 18
+- item: protein shake (25g whey, water)
+  meal: snack
+  kcal: 120
+  protein_g: 25
+  carbs_g: 3
+  fat_g: 2
+- item: 100g cooked rice + 200g palak dal + 200g firm tofu + 200g dahi (curd)
+  meal: lunch
+  kcal: 723
+  protein_g: 54
+  carbs_g: 65
+  fat_g: 31
