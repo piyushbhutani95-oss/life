@@ -45,3 +45,17 @@ notifications_sent:
   level: soft
   at: '13:00'
 scheduled_blocks: []
+food:
+- item: 3 whole eggs + 2 slices Bajo super-foods high-protein bread (54g)
+  meal: breakfast
+  kcal: 350
+  protein_g: 31
+  carbs_g: 19
+  fat_g: 18
+- item: 175g boiled chicken breast + 100g cooked rice + ~150g beans-aloo sabzi (light
+    oil)
+  meal: lunch
+  kcal: 586
+  protein_g: 61
+  carbs_g: 52
+  fat_g: 13
