@@ -3,6 +3,9 @@ completions:
 - goal_id: bath
   status: done
   at: '13:46'
+- goal_id: skincare
+  status: done
+  at: '13:46'
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
