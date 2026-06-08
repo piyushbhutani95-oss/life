@@ -49,3 +49,10 @@ notifications_sent:
   level: soft
   at: '10:00'
 scheduled_blocks: []
+food:
+- item: 3 whole eggs + 1 egg white + 2 slices Bajo super-foods high-protein bread (54g)
+  meal: breakfast
+  kcal: 367
+  protein_g: 35
+  carbs_g: 19
+  fat_g: 18
