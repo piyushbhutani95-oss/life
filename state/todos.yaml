@@ -59,3 +59,7 @@ todos:
   text: flights
   added_at: 2026-05-28T15:22
   done_at: 2026-06-02T11:21
+- id: t-1780883030
+  text: aastha money transfer
+  added_at: 2026-06-08T07:13
+  done_at: null
