@@ -42,3 +42,24 @@ notifications_sent:
   level: soft
   at: '13:00'
 scheduled_blocks: []
+food:
+- item: 3 scrambled eggs (light butter/oil) + 2 slices Bajo super-foods high-protein
+    bread (54g)
+  meal: breakfast
+  kcal: 385
+  protein_g: 31
+  carbs_g: 19
+  fat_g: 22
+- item: 100g cooked rice + 120g firm tofu + 150g cooked dal + 200g curd + bit of bhindi/beans
+    sabzi
+  meal: lunch
+  kcal: 648
+  protein_g: 41
+  carbs_g: 69
+  fat_g: 24
+- item: snack bar (40g, label values - low protein despite branding)
+  meal: snack
+  kcal: 201
+  protein_g: 5.2
+  carbs_g: 20.7
+  fat_g: 10.8
