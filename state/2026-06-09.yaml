@@ -45,6 +45,10 @@ notifications_sent:
   nudge_time: '15:00'
   level: soft
   at: '15:00'
+- goal_id: write
+  nudge_time: '17:00'
+  level: soft
+  at: '17:00'
 scheduled_blocks: []
 food:
 - item: 3 scrambled eggs (light butter/oil) + 2 slices Bajo super-foods high-protein
