@@ -34,3 +34,10 @@ notifications_sent:
   level: soft
   at: '10:00'
 scheduled_blocks: []
+food:
+- item: small cup of tea (milk, light sugar) + Milky Mist Skyr (~100g cup, from label)
+  meal: breakfast
+  kcal: 161
+  protein_g: 13
+  carbs_g: 16
+  fat_g: 5
