@@ -1,17 +1,5 @@
 date: '2026-06-10'
-completions:
-- goal_id: bath
-  status: done
-  at: '13:04'
-- goal_id: multivitamins
-  status: done
-  at: '13:04'
-- goal_id: skincare
-  status: done
-  at: '13:04'
-- goal_id: workout
-  status: done
-  at: '13:04'
+completions: []
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
@@ -45,14 +33,6 @@ notifications_sent:
   nudge_time: '10:00'
   level: soft
   at: '10:00'
-- goal_id: workout
-  nudge_time: '13:00'
-  level: soft
-  at: '13:00'
-- goal_id: food
-  nudge_time: '13:00'
-  level: soft
-  at: '13:00'
 scheduled_blocks: []
 food:
 - item: small cup of tea (milk, light sugar) + Milky Mist Skyr (~100g cup, from label)
@@ -61,3 +41,9 @@ food:
   protein_g: 13
   carbs_g: 16
   fat_g: 5
+- item: protein shake (25g whey + ~150ml milk)
+  meal: snack
+  kcal: 190
+  protein_g: 30
+  carbs_g: 10
+  fat_g: 6.5
