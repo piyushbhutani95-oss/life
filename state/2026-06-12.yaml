@@ -25,4 +25,8 @@ notifications_sent:
   nudge_time: 06:15
   level: soft
   at: 06:15
+- goal_id: food
+  nudge_time: 09:00
+  level: soft
+  at: 09:00
 scheduled_blocks: []
