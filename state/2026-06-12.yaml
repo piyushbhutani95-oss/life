@@ -45,3 +45,16 @@ notifications_sent:
   level: soft
   at: '13:00'
 scheduled_blocks: []
+food:
+- item: 3 whole eggs + 2 slices Bajo super-foods high-protein bread (54g)
+  meal: breakfast
+  kcal: 350
+  protein_g: 31
+  carbs_g: 19
+  fat_g: 18
+- item: 100g cooked rice + 150g cooked dal + 150g firm tofu
+  meal: lunch
+  kcal: 526
+  protein_g: 39
+  carbs_g: 55
+  fat_g: 20
