@@ -89,6 +89,10 @@ notifications_sent:
   nudge_time: '21:00'
   level: soft
   at: '21:00'
+- goal_id: read
+  nudge_time: '21:30'
+  level: soft
+  at: '21:30'
 scheduled_blocks: []
 food:
 - item: 75g protein oats + 2 whole eggs + 2 slices Bajo super-foods high-protein bread
