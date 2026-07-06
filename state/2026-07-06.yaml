@@ -74,6 +74,10 @@ notifications_sent:
   nudge_time: '18:00'
   level: soft
   at: '18:01'
+- goal_id: course
+  nudge_time: '19:00'
+  level: soft
+  at: '19:00'
 scheduled_blocks: []
 food:
 - item: 1 whole egg + 1 slice regular bread + protein shake (25g whey + ~50ml milk)
