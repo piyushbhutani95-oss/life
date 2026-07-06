@@ -47,16 +47,17 @@ notifications_sent:
   nudge_time: '13:00'
   level: soft
   at: '13:00'
-- goal_id: respond-to-people
-  nudge_time: '15:00'
-  level: soft
-  at: '15:00'
 scheduled_blocks: []
 food:
-- item: 1 whole egg + 1 slice Bajo super-foods high-protein bread (27g) + protein
-    shake (25g whey + ~50ml milk)
+- item: 1 whole egg + 1 slice regular bread + protein shake (25g whey + ~50ml milk)
   meal: breakfast
-  kcal: 269
-  protein_g: 40
-  carbs_g: 15
-  fat_g: 10
+  kcal: 277
+  protein_g: 36
+  carbs_g: 19
+  fat_g: 9
+- item: 100g cooked quinoa + 150g cooked dal + 125g firm tofu
+  meal: lunch
+  kcal: 480
+  protein_g: 36
+  carbs_g: 47
+  fat_g: 19
