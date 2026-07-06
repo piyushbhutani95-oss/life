@@ -12,6 +12,9 @@ completions:
 - goal_id: multivitamins
   status: done
   at: '16:01'
+- goal_id: skincare
+  status: done
+  at: '16:01'
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
