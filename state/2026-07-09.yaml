@@ -45,4 +45,8 @@ notifications_sent:
   nudge_time: '15:00'
   level: soft
   at: '15:01'
+- goal_id: write
+  nudge_time: '17:00'
+  level: soft
+  at: '17:01'
 scheduled_blocks: []
