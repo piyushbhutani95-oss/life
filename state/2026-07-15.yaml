@@ -39,4 +39,12 @@ notifications_sent:
   nudge_time: '10:00'
   level: soft
   at: '10:01'
+- goal_id: workout
+  nudge_time: '13:00'
+  level: soft
+  at: '13:01'
+- goal_id: food
+  nudge_time: '13:00'
+  level: soft
+  at: '13:01'
 scheduled_blocks: []
