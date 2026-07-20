@@ -1,0 +1,28 @@
+date: '2026-07-20'
+completions: []
+notifications_sent:
+- goal_id: wake-early
+  nudge_time: 06:00
+  level: soft
+  at: 08:00
+- goal_id: meditate
+  nudge_time: 06:00
+  level: soft
+  at: 08:00
+- goal_id: journal
+  nudge_time: 06:15
+  level: soft
+  at: 08:00
+- goal_id: bath
+  nudge_time: 06:45
+  level: soft
+  at: 08:00
+- goal_id: skincare
+  nudge_time: 06:45
+  level: soft
+  at: 08:00
+- goal_id: multivitamins
+  nudge_time: 08:00
+  level: soft
+  at: 08:00
+scheduled_blocks: []
