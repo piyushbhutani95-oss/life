@@ -1,5 +1,8 @@
 date: '2026-07-28'
-completions: []
+completions:
+- goal_id: journal
+  status: done
+  at: '10:03'
 notifications_sent:
 - goal_id: wake-early
   nudge_time: 06:00
