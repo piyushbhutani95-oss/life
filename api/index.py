@@ -366,7 +366,10 @@ def run_tick() -> dict:
     if not goals_content or not settings_content:
         return {"error": "failed to fetch goals.yaml or settings.example.yaml"}
 
-    goals = (yaml.safe_load(goals_content) or {}).get("goals", []) or []
+    goals_data = yaml.safe_load(goals_content) or {}
+    if goals_data.get("paused"):
+        return {"status": "paused", "reason": "notifications disabled via goals.yaml", "at": now.strftime("%H:%M IST")}
+    goals = goals_data.get("goals", []) or []
     settings = yaml.safe_load(settings_content) or {}
     quiet = settings.get("quiet_hours", []) or []
 
