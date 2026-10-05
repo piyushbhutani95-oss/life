@@ -370,6 +370,10 @@ def main() -> int:
         show_schedule(goals, quiet)
         return 0
 
+    if goals_data.get("paused"):
+        print("[tick] paused — notifications disabled via goals.yaml")
+        return 0
+
     tz_name = settings.get("user", {}).get("timezone", "UTC")
     tz = ZoneInfo(tz_name)
     rollover = settings.get("day", {}).get("rollover_hour", 3)

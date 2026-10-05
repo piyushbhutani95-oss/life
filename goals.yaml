@@ -21,6 +21,12 @@
 #   nudge_at:        when this goal first nudges. Either a single "HH:MM"
 #                    string, or a list ["HH:MM", ...] for multi check-ins.
 #                    Omit for "TBD — flexible, no nudge until decided".
+#
+# paused: top-level kill switch. When true, tick.py exits without sending
+# any ntfy pushes. Dashboard and completions still work. Set to false (or
+# remove the line) to resume notifications.
+
+paused: true
 
 goals:
 
