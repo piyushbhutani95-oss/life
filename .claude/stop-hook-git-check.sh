@@ -46,6 +46,7 @@ if [[ -n "$current_branch" ]]; then
     unverifiable=$(git log --format='%h %G? %ce' "$upstream..HEAD" 2>/dev/null | awk '
       $3 == "noreply@vercel.app" { next }
       $3 == "piyushbhutani95@gmail.com" { next }
+      $3 == "noreply@anthropic.com" { next }
       $2 == "N" || $3 != "noreply@anthropic.com"
     ')
     if [[ -n "$unverifiable" ]]; then
